@@ -1,0 +1,87 @@
+/* contenedor reutilizable */
+.container {
+  width: min(1150px, 92vw);
+  margin: 0 auto;
+}
+
+/* barra superior tipo aviso */
+.topbar {
+  background: #234e9b;
+  color: #fff;
+  font-size: 14px;
+}
+.topbarInner {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 16px;
+}
+.phone b { font-weight: 800; }
+
+/* HERO */
+.hero {
+  padding: clamp(40px, 8vw, 96px) 0;
+  background: linear-gradient(180deg, #f7fbff 0%, #ffffff 100%);
+}
+.grid {
+  display: grid;
+  gap: 28px;
+  align-items: center;
+  text-align: center;
+}
+@media (min-width: 900px) {
+  .grid { grid-template-columns: 1.05fr .95fr; text-align: left; }
+}
+
+.title {
+  font-size: clamp(32px, 5vw, 48px);
+  line-height: 1.1;
+  color: #234e9b;
+  margin-bottom: 8px;
+  letter-spacing: -0.3px;
+}
+.subtitle {
+  color: #4a5568;
+  margin-bottom: 18px;
+}
+
+/* botones */
+.actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+@media (min-width: 900px) { .actions { justify-content: flex-start; } }
+
+.cta {
+  display:inline-block; padding:12px 16px; border-radius:999px;
+  background: linear-gradient(#69c0ff,#48a7ff); color:#fff; font-weight:700;
+  box-shadow: 0 6px 18px rgba(72,167,255,.25);
+}
+.cta:hover { filter: brightness(1.05); }
+.cta:focus-visible { outline: 3px solid rgba(72,167,255,.35); outline-offset: 2px; }
+
+/* imagen hero (usa tu asset cuando lo tengas) */
+.media img {
+  width: 100%; height: auto; display: block;
+  border-radius: 16px;
+  box-shadow: 0 12px 36px rgba(0,0,0,.08);
+}
+
+.services { padding: 44px 0; background:#fff; }
+.servicesTitle {
+  text-align:center; font-size: clamp(22px,3vw,30px);
+  color:#2b3a55; margin-bottom: 20px;
+}
+.cards {
+  display:grid; gap:16px; grid-template-columns:repeat(2,1fr);
+}
+@media (min-width: 900px) { .cards { grid-template-columns: repeat(4,1fr); } }
+.card {
+  background:#fff; border:1px solid #eef1f5; border-radius:16px;
+  padding:20px; text-align:center;
+}
+.icon { font-size:42px; margin-bottom:10px; }
+.iconImg {
+  width: 52px;
+  height: 52px;
+  display: block;
+  margin: 0 auto 10px;
+}
+.label { font-weight:600; color:#2b3a55; }

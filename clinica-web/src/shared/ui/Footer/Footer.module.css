@@ -1,0 +1,65 @@
+.footer {
+  background-color: #004a8f; /* azul estilo BlueMedical */
+  color: #fff;
+  padding: 3rem 1rem 1rem;
+  margin-top: 3rem;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.col h4 {
+  font-size: 1.1rem;
+  margin-bottom: 0.8rem;
+  border-bottom: 2px solid #fff;
+  display: inline-block;
+  padding-bottom: 0.2rem;
+}
+
+.col p, 
+.col li, 
+.col a {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #eee;
+  text-decoration: none;
+}
+
+.col ul {
+  list-style: none;
+  padding: 0;
+}
+
+.col li {
+  margin-bottom: 0.4rem;
+}
+
+.socials a {
+  display: block;
+  margin-bottom: 0.4rem;
+  transition: color 0.3s ease;
+}
+
+.socials a:hover {
+  color: #ffd700; /* dorado al hover */
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.6rem;
+}
+
+.copy {
+  text-align: center;
+  margin-top: 2rem;
+  border-top: 1px solid rgba(255,255,255,0.2);
+  padding-top: 1rem;
+  font-size: 0.9rem;
+  color: #ddd;
+}
