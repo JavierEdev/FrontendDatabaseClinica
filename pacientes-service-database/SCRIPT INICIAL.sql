@@ -1,13 +1,4 @@
 -- ===========================
--- Crear Base de Datos
--- ===========================
-CREATE DATABASE IF NOT EXISTS pacientes_service 
-  CHARACTER SET utf8mb4 
-  COLLATE utf8mb4_unicode_ci;
-
-USE pacientes_service;
-
--- ===========================
 -- Tabla: Pacientes
 -- ===========================
 CREATE TABLE IF NOT EXISTS Pacientes (
