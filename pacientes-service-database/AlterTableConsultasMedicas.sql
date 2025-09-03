@@ -4,3 +4,4 @@ ALTER TABLE consultasmedicas
     FOREIGN KEY (id_cita) REFERENCES citasmedicas(id_cita)
     ON UPDATE CASCADE
     ON DELETE RESTRICT;
+
