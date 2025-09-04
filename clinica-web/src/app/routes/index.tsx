@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 // Públicas
 import HomePage from "@/pages/HomePage";
 import LoginPage from "@/pages/LoginPage";
+import RegistroPage from "@/pages/RegistroPage";  // Importar el componente de registro
 
 // Zona protegida “normal”
 import Dashboard from "@/pages/Dashboard";
@@ -23,6 +24,7 @@ export function AppRoutes() {
       {/* Públicas */}
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/registro" element={<RegistroPage />} /> {/* Ruta para registro paciente */}
 
       {/* Protegidas (usuario logueado) */}
       <Route

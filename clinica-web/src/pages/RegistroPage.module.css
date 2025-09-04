@@ -1,0 +1,127 @@
+/* src/pages/RegistroPage.module.css */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.icon {
+  font-size: 2rem;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #3b82f6; /* Azul coherente con el diseño */
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  color: #64748b; /* Color gris para el subtítulo */
+}
+
+.card {
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+}
+
+.sectionTitle {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: #1e40af; /* Azul coherente con los títulos */
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.gridDoc {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.field {
+  margin-bottom: 15px;
+}
+
+.label {
+  font-weight: bold;
+  color: #1e3a8a; /* Azul coherente para las etiquetas */
+}
+
+.control input,
+.control select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border-radius: 5px;
+  border: 1px solid #e5e7eb; /* Color gris claro para los bordes */
+  background-color: #fff;
+}
+
+.control input:focus,
+.control select:focus {
+  border-color: #3b82f6; /* Azul de foco */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); /* Resaltado de borde azul al hacer foco */
+}
+
+.alertError {
+  color: #b91c1c; /* Rojo para error */
+  background-color: #fee2e2;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 10px;
+}
+
+.alertOk {
+  color: #065f46; /* Verde para éxito */
+  background-color: #ecfdf5;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 10px;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.btnPrimary {
+  background-color: #3b82f6; /* Azul para botón principal */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.btnGhost {
+  background-color: transparent;
+  color: #3b82f6; /* Azul para botón fantasma */
+  padding: 10px 20px;
+  border: 1px solid #3b82f6;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.btnPrimary:hover {
+  background-color: #2b6ed6; /* Azul oscuro al pasar el mouse */
+}
+
+.btnGhost:hover {
+  background-color: #f1f5f9; /* Color de fondo al pasar el mouse */
+}

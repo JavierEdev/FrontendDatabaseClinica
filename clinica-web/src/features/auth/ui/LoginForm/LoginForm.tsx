@@ -87,7 +87,7 @@ export default function LoginForm() {
         <span>¿No tienes cuenta?</span>
         <Link
           className={styles.link}
-          to={next && next !== "/" ? `/register?next=${encodeURIComponent(next)}` : "/register"}
+          to={next && next !== "/" ? `/registro?next=${encodeURIComponent(next)}` : "/registro"}
         >
           Regístrate
         </Link>
