@@ -3,6 +3,8 @@ import type {
   LoginResponse,
   Session,
   RefreshResponse,
+  CreateUsuariosRequest,
+  CreateUsuariosResponse,
 } from "../model/auth";
 import { normalizeRole } from "../model/roles";
 import { setAuth } from "../lib/storage";
@@ -130,4 +132,26 @@ export function logout() {
   localStorage.removeItem("refreshToken");
   localStorage.removeItem("user");
   window.location.href = "/";
+}
+
+export async function createUser(
+  CreateUsuariosRequest: CreateUsuariosRequest
+): Promise<void> {
+  const response = await fetch(`${BASE}/api/Usuarios`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(CreateUsuariosRequest),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error en la creación del usuario: ${response.statusText}`);
+  }
+
+  if (response.status === 201) {
+    return;
+  }
+
+  throw new Error("La respuesta del servidor no contiene los datos esperados.");
 }

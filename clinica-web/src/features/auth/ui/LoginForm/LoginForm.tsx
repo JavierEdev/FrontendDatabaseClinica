@@ -4,10 +4,25 @@ import styles from "./LoginForm.module.css";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { AppRole } from "@/features/auth/model/roles";
 
+/** Prefijos de rutas permitidos por rol */
+const allowedByRole: Record<AppRole, string[]> = {
+  admin: ["/admin"],
+  recepcionista: ["/admin"], // añade "/recepcion" si tienes esa sección
+  medico: ["/admin"],
+  paciente: ["/citas", "/usuarios"], // paciente puede ir a /citas o /usuarios
+};
+
+const defaultNextByRole: Record<AppRole, string> = {
+  admin: "/admin",
+  recepcionista: "/admin",
+  medico: "/admin",
+  paciente: "/citas",
+};
+
 function safeNextForRole(next: string | null, role: AppRole) {
-  if (!next) return null;
-  if (next.startsWith("/admin") && role !== "admin") return null;
-  return next.startsWith("/") ? next : null;
+  if (!next || !next.startsWith("/")) return null;
+  const allowed = allowedByRole[role];
+  return allowed.some((p) => next.startsWith(p)) ? next : null;
 }
 
 export default function LoginForm() {
@@ -26,22 +41,13 @@ export default function LoginForm() {
     setE("");
     setL(true);
     try {
-      const data = await login(username, password); // Session con role normalizado: "admin" | "user" | "medico"
-      // console.log("[LOGIN] session:", data);
+      const data = await login(username, password);
 
-      const isAdmin = data.role === "admin";
-      const defaultNext = isAdmin ? "/admin" : "/dashboard";
+      const defaultNext = defaultNextByRole[data.role];
+      const target = safeNextForRole(next, data.role) || defaultNext;
 
-      // admin: solo aceptamos next si apunta a /admin*
-      // no-admin: aceptamos cualquier next interno válido
-      const target = isAdmin
-        ? (next && next.startsWith("/admin") ? next : defaultNext)
-        : (safeNextForRole(next, data.role) || defaultNext);
-
-      // console.log("[LOGIN] navigating to:", target);
       nav(target, { replace: true });
     } catch (err) {
-      // console.error("[LOGIN] error:", err);
       setE((err as Error).message || "Credenciales inválidas");
     } finally {
       setL(false);
@@ -87,7 +93,11 @@ export default function LoginForm() {
         <span>¿No tienes cuenta?</span>
         <Link
           className={styles.link}
-          to={next && next !== "/" ? `/registro?next=${encodeURIComponent(next)}` : "/registro"}
+          to={
+            next && next !== "/"
+              ? `/registro?next=${encodeURIComponent(next)}`
+              : "/registro"
+          }
         >
           Regístrate
         </Link>

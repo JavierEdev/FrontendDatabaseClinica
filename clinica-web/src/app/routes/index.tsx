@@ -3,11 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 // Públicas
 import HomePage from "@/pages/HomePage";
 import LoginPage from "@/pages/LoginPage";
-import RegistroPage from "@/pages/RegistroPage";  // Importar el componente de registro
-
-// Zona protegida “normal”
-import Dashboard from "@/pages/Dashboard";
-import { ProtectedRoute } from "@/features/auth/guards/ProtectedRoute";
+import RegistroPage from "@/pages/RegistroPage";
 
 // Zona Admin (layout + páginas hijas)
 import { AdminRoute } from "@/features/auth/guards/AdminRoute";
@@ -18,20 +14,39 @@ import PacientesListPage from "@/pages/admin/pacientes/List";
 import AgregarPacientePage from "@/pages/admin/pacientes/AgregarPacientePage";
 import MedicosListPage from "@/pages/admin/medicos/MedicosListPage";
 
+// Protegidas generales
+import { ProtectedRoute } from "@/features/auth/guards/ProtectedRoute";
+
+// Paciente
+import MisCitasPage from "@/pages/usuarios/MisCitasPage";
+
+// Guard simple para paciente
+function PacienteRoute({ children }: { children: React.ReactNode }) {
+  try {
+    const raw = localStorage.getItem("user");
+    const role = raw ? JSON.parse(raw).role : null;
+    return role === "paciente" ? <>{children}</> : <Navigate to="/" replace />;
+  } catch {
+    return <Navigate to="/" replace />;
+  }
+}
+
 export function AppRoutes() {
   return (
     <Routes>
       {/* Públicas */}
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/registro" element={<RegistroPage />} /> {/* Ruta para registro paciente */}
+      <Route path="/registro" element={<RegistroPage />} />
 
-      {/* Protegidas (usuario logueado) */}
+      {/* Paciente */}
       <Route
-        path="/dashboard"
+        path="/citas"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <PacienteRoute>
+              <MisCitasPage />
+            </PacienteRoute>
           </ProtectedRoute>
         }
       />

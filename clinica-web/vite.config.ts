@@ -7,7 +7,14 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      "/api": "http://localhost:5151",
+      "/api/citas": {
+        target: "http://localhost:5092",
+        changeOrigin: true,
+      },
+      "/api": {
+        target: "http://localhost:5151",
+        changeOrigin: true,
+      },
     },
   },
   resolve: {

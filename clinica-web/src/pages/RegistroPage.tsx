@@ -1,5 +1,3 @@
-// src/pages/RegistroPage.tsx
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -7,6 +5,8 @@ import {
   subirDocumentoPaciente,
 } from "@/features/pacientes/api/pacientes";
 import type { NuevoPaciente } from "@/features/pacientes/model/pacientes";
+import { createUser } from "@/features/auth/api/api";
+import type { CreateUsuariosRequest } from "@/features/auth/model/auth";
 import styles from "./RegistroPage.module.css";
 
 export default function RegistroPage() {
@@ -24,22 +24,42 @@ export default function RegistroPage() {
     estadoCivil: "",
   });
 
+  const [usuario, setUsuario] = useState<CreateUsuariosRequest>({
+    username: "",
+    password: "",
+    rol: "paciente",
+    idMedico: null,
+    idPaciente: 0,
+  });
+
   const [docFile, setDocFile] = useState<File | null>(null);
   const [categoria, setCategoria] = useState("DPI");
   const [notas, setNotas] = useState("");
-  const [password, setPassword] = useState(""); // Nuevo estado para la contraseña
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [okMsg, setOkMsg] = useState<string>("");
 
+  // Manejo de cambios en los campos de input
   function onChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) {
     const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
+
+    if (name === "correo" || name === "password") {
+      setUsuario((prevState) => ({
+        ...prevState,
+        [name === "correo" ? "username" : "password"]: value,
+      }));
+      setForm((prevState) => ({
+        ...prevState,
+        [name]: value,
+      }));
+    } else {
+      setForm((f) => ({ ...f, [name]: value }));
+    }
   }
 
+  // Función para enviar el formulario
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -54,7 +74,7 @@ export default function RegistroPage() {
       !form.apellidos ||
       !form.dpi ||
       !form.fechaNacimiento ||
-      !password
+      !usuario.password
     ) {
       setError("Completa todos los campos, incluidos los de la contraseña.");
       return;
@@ -64,9 +84,11 @@ export default function RegistroPage() {
     try {
       const creado = await crearPaciente(form);
       await subirDocumentoPaciente(creado.id, docFile, categoria, notas);
+      usuario.idPaciente = creado.id;
+      await createUser(usuario);
 
       setOkMsg(`Paciente creado.`);
-      setTimeout(() => nav("/login", { replace: true }), 800); // Redirige al login
+      setTimeout(() => nav("/login", { replace: true }), 800);
     } catch (err) {
       setError((err as Error).message || "No se pudo crear el paciente");
     } finally {
@@ -154,7 +176,7 @@ export default function RegistroPage() {
             <input
               type="email"
               name="correo"
-              value={form.correo}
+              value={usuario.username}
               onChange={onChange}
             />
           </Field>
@@ -163,8 +185,8 @@ export default function RegistroPage() {
             <input
               type="password"
               name="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={usuario.password}  // Usamos 'usuario.password' para la contraseña
+              onChange={onChange}
               required
             />
           </Field>

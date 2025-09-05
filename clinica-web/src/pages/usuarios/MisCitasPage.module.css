@@ -1,0 +1,195 @@
+/* src/pages/MisCitasPage.module.css */
+
+:root {
+  --brand: #2c7be5;
+  --brand-100: #e7f0ff;
+  --brand-200: #bfd3ff;
+  --ink-900: #111827;
+  --ink-700: #374151;
+  --ink-600: #4b5563;
+  --line: #e5e7eb;
+  --bg-soft: #f5f9ff;
+  --ok: #059669;
+  --warn: #b45309;
+  --danger: #b91c1c;
+}
+
+.wrap {
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 20px;
+  border: 1px solid #dbe7ff;
+  background: var(--bg-soft);
+  border-radius: 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.logo { font-size: 28px; }
+.brandText {
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--ink-900);
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink-900);
+}
+.subtitle {
+  margin: 2px 0 0;
+  color: var(--ink-600);
+  font-size: 14px;
+}
+
+.primary {
+  justify-self: end;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--brand);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform .06s ease, box-shadow .12s ease;
+}
+.primary:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(44,123,229,.25); }
+.primary:active { transform: translateY(0); box-shadow: none; }
+.primary:disabled { opacity: .7; cursor: not-allowed; }
+
+.toolbar {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--line);
+  margin-top: 16px;
+}
+
+.filterLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-700);
+}
+.select {
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  background: white;
+  border-radius: 8px;
+}
+
+.skeleton,
+.error,
+.empty {
+  margin: 18px 4px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+.skeleton { background: #eef2ff; color: #4f46e5; }
+.error { background: #fff1f2; color: var(--danger); border: 1px solid #fecaca; }
+.empty { background: #f9fafb; color: #6b7280; border: 1px dashed var(--line); }
+
+.grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.04);
+  transition: border-color .12s ease, box-shadow .12s ease;
+}
+.card:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 4px 12px rgba(0,0,0,.06);
+}
+
+.cardBody {
+  display: grid;
+  grid-template-columns: 54px 1fr auto;
+  gap: 14px;
+  align-items: center;
+}
+
+.avatar {
+  width: 54px;
+  height: 54px;
+  border: 2px solid var(--brand-200);
+  background: var(--brand-100);
+  color: #1d4ed8;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  border-radius: 10px;
+}
+
+.info { display: grid; gap: 2px; }
+.nombre { font-weight: 700; color: var(--ink-900); }
+.especialidad { color: var(--ink-700); }
+.fecha { color: var(--ink-600); font-size: 14px; }
+
+.estadoOk { color: var(--ok); font-weight: 700; }
+.estadoPend { color: var(--warn); font-weight: 700; }
+.estadoCancel { color: var(--danger); font-weight: 700; }
+
+.actions {
+  display: grid;
+  gap: 8px;
+}
+.btnOutline {
+  background: var(--brand-100);
+  border: 1px solid var(--brand-200);
+  color: #1e40af;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: filter .12s ease;
+}
+.btnOutline:hover { filter: brightness(0.96); }
+
+.btnDanger {
+  background: var(--danger);
+  color: white;
+  border: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: filter .12s ease, opacity .12s ease;
+}
+.btnDanger:hover { filter: brightness(0.96); }
+.btnDanger:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 860px) {
+  .header {
+    grid-template-columns: 1fr auto;
+    grid-auto-rows: auto;
+  }
+  .primary { justify-self: start; }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
