@@ -22,7 +22,7 @@ const RAW =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
   ""; // usando lo del .env
 
-const BASE = RAW.replace(/\/+$/, ""); // sin slash final
+const BASE = RAW.replace(/\/+$/, "");
 
 function buildPacienteUrl(idPaciente: number): string {
   if (/\/api\/citas(\/|$)/i.test(BASE)) return `${BASE}/paciente/${idPaciente}`;
@@ -44,7 +44,6 @@ export async function fetchCitasPorPaciente(
   const url = buildPacienteUrl(idPaciente);
   if (import.meta.env.DEV) console.log("[citas] GET", url);
 
-  // SIN Authorization (me dijiste que /api/citas no requiere auth)
   const res = await fetch(url, {
     method: "GET",
     headers: { Accept: "application/json" },

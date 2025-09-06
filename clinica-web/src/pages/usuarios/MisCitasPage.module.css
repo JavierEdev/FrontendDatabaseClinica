@@ -193,3 +193,5 @@
     grid-template-columns: 1fr;
   }
 }
+
+.muted { color:#64748b; font-size:12px; margin-top:4px; display:block; }

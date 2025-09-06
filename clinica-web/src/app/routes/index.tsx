@@ -19,6 +19,7 @@ import { ProtectedRoute } from "@/features/auth/guards/ProtectedRoute";
 
 // Paciente
 import MisCitasPage from "@/pages/usuarios/MisCitasPage";
+import NuevaCitaPage from "@/pages/usuarios/NuevaCitaPage";
 
 // Guard simple para paciente
 function PacienteRoute({ children }: { children: React.ReactNode }) {
@@ -46,6 +47,16 @@ export function AppRoutes() {
           <ProtectedRoute>
             <PacienteRoute>
               <MisCitasPage />
+            </PacienteRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/citas/nueva"
+        element={
+          <ProtectedRoute>
+            <PacienteRoute>
+              <NuevaCitaPage />
             </PacienteRoute>
           </ProtectedRoute>
         }
