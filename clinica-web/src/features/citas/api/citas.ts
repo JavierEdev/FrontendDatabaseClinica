@@ -1,21 +1,20 @@
 // src/features/citas/api/citas.ts
-export type CitaEstado = "CONFIRMADA" | "CANCELADA" | "PENDIENTE";
 
-export interface Cita {
+import type {
+  CitaEstado,
+  CrearCitaRequest,
+  CrearCitaApiResponse,
+  CitaPacienteApi as RawCita,
+} from "@/features/citas/model/citas";
+
+export type Cita = {
   id: number;
   idMedico: number;
   fecha: string;
   estado: CitaEstado;
-}
+};
 
-interface RawCita {
-  idCita: number;
-  idPaciente: number;
-  idMedico: number;
-  fecha: string;
-  estado: string; // "confirmada" | "cancelada" | "pendiente"
-}
-
+// ---------- ENV / BASE URL ----------
 const RAW =
   (import.meta.env.VITE_CITAS_BASE as string | undefined) ??
   (import.meta.env.VITE_API_BASE as string | undefined) ??
@@ -24,12 +23,19 @@ const RAW =
 
 const BASE = RAW.replace(/\/+$/, "");
 
-function buildPacienteUrl(idPaciente: number): string {
-  if (/\/api\/citas(\/|$)/i.test(BASE)) return `${BASE}/paciente/${idPaciente}`;
-  if (/\/api(\/|$)/i.test(BASE)) return `${BASE}/citas/paciente/${idPaciente}`;
-  return `${BASE}/api/citas/paciente/${idPaciente}`;
+// Base para /api/citas (soporta distintas formas de BASE)
+function buildCitasUrl(): string {
+  const base = BASE.replace(/\/+$/, "");
+  if (/\/api\/citas(\/|$)?$/i.test(base)) return base;   // .../api/citas
+  if (/\/api(\/|$)/i.test(base)) return `${base}/citas`; // .../api → .../api/citas
+  return `${base}/api/citas`;                             // ... → .../api/citas
 }
 
+function buildPacienteUrl(idPaciente: number): string {
+  return `${buildCitasUrl()}/paciente/${idPaciente}`;
+}
+
+// ---------- Helpers ----------
 function normalizarEstado(s?: string): CitaEstado {
   const v = String(s ?? "").toLowerCase();
   if (v === "confirmada") return "CONFIRMADA";
@@ -37,6 +43,7 @@ function normalizarEstado(s?: string): CitaEstado {
   return "PENDIENTE";
 }
 
+// ---------- GET /api/citas/paciente/:id ----------
 export async function fetchCitasPorPaciente(
   idPaciente: number,
   signal?: AbortSignal
@@ -73,4 +80,32 @@ export async function fetchCitasPorPaciente(
     fecha: r.fecha,
     estado: normalizarEstado(r.estado),
   }));
+}
+
+// ---------- POST /api/citas ----------
+export async function crearCita(
+  payload: CrearCitaRequest,
+  signal?: AbortSignal
+): Promise<CrearCitaApiResponse> {
+  const url = buildCitasUrl();
+  if (import.meta.env.DEV) console.log("[citas] POST", url, payload);
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(payload),
+    signal,
+  });
+
+  const ct = (res.headers.get("content-type") || "").toLowerCase();
+  const text = await res.text();
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status} ${res.statusText} en ${url}. ${text.slice(0, 300)}`);
+  }
+  if (!ct.includes("application/json")) {
+    throw new Error(`Respuesta no-JSON (${ct || "sin content-type"}) en ${url}: ${text.slice(0, 300)}`);
+  }
+
+  return JSON.parse(text) as CrearCitaApiResponse;
 }
