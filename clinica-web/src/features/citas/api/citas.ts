@@ -1,27 +1,22 @@
-// src/features/citas/api/citas.ts
-
 import type {
   CitaEstado,
   CrearCitaRequest,
   CrearCitaApiResponse,
   CitaPacienteApi as RawCita,
+  APICitaGeneral as RawCitaGeneral,
+  CitaPaciente,
+  APICitaAdmin as CitaAdmin,
+  CitaDetalle
 } from "@/features/citas/model/citas";
 
-export type Cita = {
-  id: number;
-  idMedico: number;
-  fecha: string;
-  estado: CitaEstado;
-};
-
 // ---------- ENV / BASE URL ----------
-const RAW =
+const RAW_BASE =
   (import.meta.env.VITE_CITAS_BASE as string | undefined) ??
   (import.meta.env.VITE_API_BASE as string | undefined) ??
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
-  ""; // usando lo del .env
+  ""; // usando lo del .env o relativo
 
-const BASE = RAW.replace(/\/+$/, "");
+const BASE = RAW_BASE.replace(/\/+$/, "");
 
 // Base para /api/citas (soporta distintas formas de BASE)
 function buildCitasUrl(): string {
@@ -40,14 +35,28 @@ function normalizarEstado(s?: string): CitaEstado {
   const v = String(s ?? "").toLowerCase();
   if (v === "confirmada") return "CONFIRMADA";
   if (v === "cancelada") return "CANCELADA";
+  if (v === "reprogramada") return "REPROGRAMADA";
   return "PENDIENTE";
+}
+
+async function ensureJson(res: Response, url: string): Promise<string> {
+  const ct = (res.headers.get("content-type") || "").toLowerCase();
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status} ${res.statusText} en ${url}. ${text.slice(0, 300)}`);
+  }
+  if (!text.trim()) return "[]"; // permite manejar 204 sin body como array vacío
+  if (!ct.includes("application/json")) {
+    throw new Error(`Respuesta no-JSON (${ct || "sin content-type"}) en ${url}: ${text.slice(0, 300)}`);
+  }
+  return text;
 }
 
 // ---------- GET /api/citas/paciente/:id ----------
 export async function fetchCitasPorPaciente(
   idPaciente: number,
   signal?: AbortSignal
-): Promise<Cita[]> {
+): Promise<CitaPaciente[]> {
   const url = buildPacienteUrl(idPaciente);
   if (import.meta.env.DEV) console.log("[citas] GET", url);
 
@@ -57,23 +66,10 @@ export async function fetchCitasPorPaciente(
     signal,
   });
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`HTTP ${res.status} ${res.statusText} en ${url}. ${body.slice(0, 200)}`);
-  }
-
   if (res.status === 204) return [];
 
-  const ct = (res.headers.get("content-type") || "").toLowerCase();
-  const text = await res.text();
-
-  if (!text.trim()) return [];
-
-  if (!ct.includes("application/json")) {
-    throw new Error(`Respuesta no-JSON (${ct || "sin content-type"}) en ${url}: ${text.slice(0, 200)}`);
-  }
-
-  const arr = JSON.parse(text) as RawCita[];
+  const text = await ensureJson(res, url);
+  const arr = JSON.parse(text) as RawCita[]; // esperamos un array raw
   return arr.map((r) => ({
     id: r.idCita,
     idMedico: r.idMedico,
@@ -97,15 +93,69 @@ export async function crearCita(
     signal,
   });
 
-  const ct = (res.headers.get("content-type") || "").toLowerCase();
-  const text = await res.text();
-
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status} ${res.statusText} en ${url}. ${text.slice(0, 300)}`);
-  }
-  if (!ct.includes("application/json")) {
-    throw new Error(`Respuesta no-JSON (${ct || "sin content-type"}) en ${url}: ${text.slice(0, 300)}`);
-  }
-
+  const text = await ensureJson(res, url);
   return JSON.parse(text) as CrearCitaApiResponse;
+}
+
+// ---------- GET /api/citas (todas) ----------
+export async function fetchTodasCitas(signal?: AbortSignal): Promise<CitaAdmin[]> {
+  const url = buildCitasUrl();
+  if (import.meta.env.DEV) console.log("[citas] GET", url);
+
+  const res = await fetch(url, {
+    method: "GET",
+    headers: { Accept: "application/json" },
+    signal,
+  });
+
+  const text = await ensureJson(res, url);
+  // Tu backend: { success, message, data: RawCitaGeneral[] }
+  const json = JSON.parse(text) as {
+    success: boolean;
+    message?: string;
+    data?: RawCitaGeneral[];
+  };
+
+  if (!json.success) throw new Error(json.message || "Error al obtener citas");
+  const data = Array.isArray(json.data) ? json.data : [];
+
+  return data.map((r) => ({
+    id: r.idCita,
+    idPaciente: r.idPaciente,
+    idMedico: r.idMedico,
+    fecha: r.fecha,
+    estado: normalizarEstado(r.estado),
+    medicoNombre: r.medicoNombre,
+    especialidad: r.especialidad,
+  }));
+}
+
+function buildCitaDetalleUrl(idPaciente: number, idCita: number): string {
+  return `${buildCitasUrl()}/paciente/${idPaciente}/${idCita}`;
+}
+
+/** GET /api/citas/paciente/{idPaciente}/{idCita}  */
+export async function fetchCitaDetalle(
+  idPaciente: number,
+  idCita: number,
+  signal?: AbortSignal
+): Promise<CitaDetalle> {
+  const url = buildCitaDetalleUrl(idPaciente, idCita);
+  if (import.meta.env.DEV) console.log("[citas] GET", url);
+
+  const res = await fetch(url, { method: "GET", headers: { Accept: "application/json" }, signal });
+  const text = await ensureJson(res, url);
+
+  const raw = JSON.parse(text);
+  const r = raw?.data ?? raw;
+
+  return {
+    id: r.idCita,
+    idPaciente: r.idPaciente,
+    idMedico: r.idMedico,
+    fecha: r.fecha,
+    estado: normalizarEstado(r.estado),
+    medicoNombre: r.medicoNombre,
+    especialidad: r.especialidad,
+  };
 }

@@ -1,0 +1,53 @@
+.page { max-width: 900px; margin: 0 auto; padding: 24px; }
+.header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.backBtn { border: 1px solid #e5e7eb; background: #fff; padding: 6px 10px; border-radius: 8px; cursor: pointer; }
+.backBtn:hover { background: #f3f4f6; }
+.title { font-size: 22px; font-weight: 700; }
+
+.card { background: #fff; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.06); padding: 16px; }
+.rows { display: grid; gap: 10px; margin-bottom: 12px; }
+.row { display: grid; grid-template-columns: 180px 1fr; gap: 10px; }
+.label { color: #6b7280; }
+.value { font-weight: 500; }
+.inlineLink { color: #2563eb; text-decoration: none; margin-left: 6px; }
+.inlineLink:hover { text-decoration: underline; }
+
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.btnSec { border: 1px solid #e5e7eb; background: #fff; padding: 8px 12px; border-radius: 10px; text-decoration: none; color: inherit; }
+.btnSec:hover { background: #f3f4f6; }
+.btnPri { background: #2563eb; color: #fff; border: 0; padding: 8px 12px; border-radius: 10px; }
+.btnPri:disabled { opacity: .6; }
+.btnWarn { background: #dc2626; color: #fff; border: 0; padding: 8px 12px; border-radius: 10px; }
+.btnWarn:disabled { opacity: .6; }
+
+.badge { padding: 4px 8px; border-radius: 999px; font-size: 12px; text-transform: capitalize; }
+.st_CONFIRMADA { background: #ecfdf5; color: #065f46; }
+.st_REPROGRAMADA { background: #eff6ff; color: #1d4ed8; }
+.st_CANCELADA { background: #fef2f2; color: #b91c1c; }
+.st_PENDIENTE  { background: #fff7ed; color: #9a3412; }
+
+@media (max-width: 640px) {
+  .row { grid-template-columns: 1fr; }
+  .label { font-weight: 600; }
+}
+
+.sectionSubTitle { font-weight: 700; margin: 12px 0 6px; }
+.tableWrap { overflow-x: auto; }
+.miniTable { width: 100%; border-collapse: collapse; font-size: 14px; }
+.miniTable th, .miniTable td { padding: 8px 10px; border-bottom: 1px solid #f3f4f6; text-align: left; }
+.miniTable thead th { background: #fafafa; font-weight: 600; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+.empty { color: #6b7280; font-style: italic; }
+
+.cardTitle { font-weight: 700; margin-bottom: 10px; }
+.gridTwo { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+
+.sectionSubTitle { font-weight: 700; margin: 12px 0 6px; }
+.tableWrap { overflow-x: auto; }
+.miniTable { width: 100%; border-collapse: collapse; font-size: 14px; }
+.miniTable th, .miniTable td { padding: 8px 10px; border-bottom: 1px solid #f3f4f6; text-align: left; }
+.miniTable thead th { background: #fafafa; font-weight: 600; }
+
+@media (max-width: 860px) {
+  .gridTwo { grid-template-columns: 1fr; }
+}

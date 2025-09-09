@@ -1,0 +1,42 @@
+.page { max-width: 1200px; margin: 0 auto; padding: 24px; }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.title { font-size: 24px; font-weight: 700; }
+.subtitle { color: #6b7280; }
+
+.primaryBtn { background: #2563eb; color: #fff; border: 0; padding: 10px 14px; border-radius: 10px; cursor: pointer; }
+.primaryBtn:hover { filter: brightness(0.95); }
+
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0 8px; }
+.kpi { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+.kpiLabel { color: #6b7280; font-size: 12px; }
+.kpiValue { font-size: 22px; font-weight: 700; }
+
+.toolbar { display: grid; grid-template-columns: 1fr 220px auto auto; gap: 10px; align-items: end; margin: 12px 0 16px; }
+.input { width: 100%; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 10px; }
+.range { display: flex; gap: 8px; }
+.range label { display: grid; gap: 4px; font-size: 12px; color: #6b7280; }
+.chips { display: flex; gap: 8px; }
+.chip { border: 1px solid #e5e7eb; background: #fff; padding: 8px 10px; border-radius: 999px; cursor: pointer; }
+.chip:hover { background: #f3f4f6; }
+
+.card { background: #fff; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.06); overflow: hidden; }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { padding: 12px; border-bottom: 1px solid #f3f4f6; text-align: left; }
+.table th { background: #fafafa; font-weight: 600; cursor: pointer; user-select: none; }
+
+.badge { padding: 4px 8px; border-radius: 999px; font-size: 12px; text-transform: capitalize; }
+.st_CONFIRMADA { background: #ecfdf5; color: #065f46; }
+.st_REPROGRAMADA { background: #eff6ff; color: #1d4ed8; }
+.st_CANCELADA { background: #fef2f2; color: #b91c1c; }
+.st_PENDIENTE { background: #fff7ed; color: #9a3412; }
+
+.actions { display: flex; gap: 6px; }
+.actions button { padding: 6px 10px; border-radius: 8px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; }
+.actions button:hover { background: #f3f4f6; }
+
+.empty { text-align: center; color: #6b7280; padding: 24px; }
+
+@media (max-width: 900px) {
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .toolbar { grid-template-columns: 1fr; }
+}

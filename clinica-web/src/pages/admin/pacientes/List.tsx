@@ -110,7 +110,6 @@ export default function PacientesListPage() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>N° HC</th>
                 <th className={styles.sortable} onClick={() => setSortAsc(!sortAsc)}>
                   Paciente {sortAsc ? "▲" : "▼"}
                 </th>
@@ -139,7 +138,6 @@ export default function PacientesListPage() {
 
               {!loading && !err && items.map((p) => (
                 <tr key={p.idPaciente}>
-                  <td className={styles.mono}>{p.numeroHistoriaClinica ?? "—"}</td>
                   <td><div className={styles.name}>{p.apellidos} {p.nombres}</div></td>
                   <td className={styles.mono}>{p.dpi ?? "—"}</td>
                   <td>

@@ -1,7 +1,14 @@
 import { api } from "@/features/auth/api/api";
-import type { NuevoPaciente, PacienteCreado, ListaPacientesResponse } from "../model/pacientes";
+import type {
+  NuevoPaciente,
+  PacienteCreado,
+  ListaPacientesResponse,
+  PacienteDetalleResponse
+} from "../model/pacientes";
 
-export async function crearPaciente(body: NuevoPaciente): Promise<PacienteCreado> {
+export async function crearPaciente(
+  body: NuevoPaciente
+): Promise<PacienteCreado> {
   return api<PacienteCreado>("/api/Pacientes", {
     method: "POST",
     body: JSON.stringify(body),
@@ -24,7 +31,9 @@ export async function subirDocumentoPaciente(
   const headers: Record<string, string> = {};
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const BASE = import.meta.env.DEV ? "" : (import.meta.env.VITE_API_BASE_URL as string) ?? "";
+  const BASE = import.meta.env.DEV
+    ? ""
+    : (import.meta.env.VITE_API_BASE_URL as string) ?? "";
 
   const r = await fetch(`${BASE}/api/Pacientes/${idPaciente}/documentos`, {
     method: "POST",
@@ -42,7 +51,29 @@ export async function subirDocumentoPaciente(
   }
 }
 
-export async function listarPacientes(page = 1, pageSize = 10): Promise<ListaPacientesResponse> {
+export async function listarPacientes(
+  page = 1,
+  pageSize = 10
+): Promise<ListaPacientesResponse> {
   const url = `/api/Pacientes?page=${page}&pageSize=${pageSize}`;
   return api<ListaPacientesResponse>(url, { method: "GET", auth: true });
+}
+
+// ---------- GET /api/Pacientes/{idPaciente} ----------
+export async function fetchPacienteById(
+  idPaciente: number,
+  signal?: AbortSignal
+): Promise<PacienteDetalleResponse> {
+  const url = `/api/Pacientes/${idPaciente}`;
+
+  const raw = await api<any>(url, { method: "GET", auth: true, signal });
+
+  const r = raw?.data ?? raw;
+
+  return {
+    ...r,
+    contactosEmergencia: Array.isArray(r?.contactosEmergencia)
+      ? r.contactosEmergencia
+      : [],
+  } as PacienteDetalleResponse;
 }

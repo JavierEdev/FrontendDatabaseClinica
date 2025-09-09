@@ -45,3 +45,25 @@ export type ListaPacientesResponse = {
   total: number;
   items: PacienteItem[];
 };
+
+// Tipos
+export type ContactoEmergenciaResponseDetallePaciente = {
+  idContacto: number;
+  nombre: string;
+  parentesco: string;
+  telefono?: string;
+};
+
+export type PacienteDetalleResponse = {
+  idPaciente: number;
+  nombres: string;
+  apellidos: string;
+  dpi: string;
+  fechaNacimiento: string; // "YYYY-MM-DDTHH:mm:ss"
+  sexo: "M" | "F" | (string & {});
+  direccion?: string;
+  telefono?: string;
+  correo?: string;
+  estadoCivil?: string;
+  contactosEmergencia: ContactoEmergenciaResponseDetallePaciente[];
+};

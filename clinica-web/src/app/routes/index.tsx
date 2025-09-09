@@ -13,6 +13,8 @@ import CitasPage from "@/pages/admin/citas/CitasPage";
 import PacientesListPage from "@/pages/admin/pacientes/List";
 import AgregarPacientePage from "@/pages/admin/pacientes/AgregarPacientePage";
 import MedicosListPage from "@/pages/admin/medicos/MedicosListPage";
+import AdminCitasList from "@/pages/admin/citas/AdminCitasList";;
+import CitaDetallePage from "@/pages/admin/citas/CitaDetallePage";
 
 // Protegidas generales
 import { ProtectedRoute } from "@/features/auth/guards/ProtectedRoute";
@@ -72,7 +74,8 @@ export function AppRoutes() {
         }
       >
         <Route index element={<AdminHomePage />} />
-        <Route path="citas" element={<CitasPage />} />
+        <Route path="citas" element={<AdminCitasList />} />
+        <Route path="citas/:idPaciente/:idCita" element={<CitaDetallePage />} />
         <Route path="pacientes" element={<PacientesListPage />} />
         <Route path="pacientes/nuevo" element={<AgregarPacientePage />} />
         <Route path="medicos" element={<MedicosListPage />} />
