@@ -1,0 +1,125 @@
+.wrap { padding: 24px; }
+
+/* Header */
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.title { margin: 0; font-size: 28px; font-weight: 800; color: #1b2559; }
+.subtitle { margin: 6px 0 0; color: #67748e; font-size: 14px; }
+
+/* Buscador (fila) */
+.searchRow { margin: 16px 0 10px; }
+.searchLine { display: flex; align-items: center; gap: 10px; }
+
+/* contenedor para el input + dropdown */
+.searchWrap { position: relative; width: clamp(280px, 40vw, 540px); }
+.searchInput {
+  width: 100%; height: 42px;
+  border: 1px solid #e6e8f0; border-radius: 10px; padding: 0 12px;
+  outline: none; font-size: 14px; transition: box-shadow .15s ease, border-color .15s ease;
+}
+.searchInput:focus { border-color: #a3bffa; box-shadow: 0 0 0 3px rgba(67, 97, 238, .15); }
+
+.primaryBtn {
+  height: 42px; padding: 0 14px; border: none; border-radius: 10px;
+  background: #3b82f6; color: #fff; font-weight: 700; cursor: pointer;
+}
+.primaryBtn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Dropdown de sugerencias */
+.suggestions {
+  position: absolute; left: 0; right: 0; top: calc(100% + 6px);
+  z-index: 20; max-height: 260px; overflow: auto;
+  background: #fff; border: 1px solid #eef0f5; border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(16,24,40,.06);
+}
+.suggestionItem {
+  width: 100%; display: flex; justify-content: space-between; align-items: center;
+  gap: 12px; padding: 10px 12px; background: #fff; border: none; cursor: pointer;
+  text-align: left;
+}
+.suggestionItem:hover { background: #f8fafc; }
+.sugName { font-weight: 700; color: #0f172a; }
+.sugDpi { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; color: #475569; }
+
+/* renglón con el paciente elegido */
+.selectedInfo { margin: 12px 0 10px; font-weight: 800; color: #2b6cb0; letter-spacing: .01em; }
+
+/* Grid de contenido */
+.contentGrid { display: grid; grid-template-columns: 320px 1fr; gap: 16px; }
+@media (max-width: 960px) { .contentGrid { grid-template-columns: 1fr; } }
+
+/* Tarjetas */
+.card {
+  background: #fff; border: 1px solid #eef0f5; border-radius: 16px; padding: 16px;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04);
+}
+.cardHeader { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cardTitle { margin: 0 0 12px; font-size: 16px; font-weight: 800; color: #111827; }
+.muted { color: #7c8aa5; font-size: 14px; }
+
+/* Skeleton / paciente */
+.patientSkeleton { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; }
+.skAvatar {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: linear-gradient(90deg,#f2f4f8 25%,#f8fafc 50%,#f2f4f8 75%);
+  background-size: 400% 100%; animation: shine 1.2s infinite;
+}
+.skLines { flex: 1; }
+.skLine, .skLineShort {
+  height: 10px; border-radius: 6px;
+  background: linear-gradient(90deg,#f2f4f8 25%,#f8fafc 50%,#f2f4f8 75%);
+  background-size: 400% 100%; animation: shine 1.2s infinite;
+}
+.skLine { width: 80%; margin-bottom: 6px; }
+.skLineShort { width: 40%; }
+@keyframes shine { 0%{background-position:100% 0} 100%{background-position:0 0} }
+
+.metaGrid { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px 12px; margin-bottom: 12px; }
+.metaLabel { color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.metaValue { color: #0f172a; font-size: 14px; font-weight: 700; }
+
+.actionsRow { display: flex; gap: 8px; }
+.outlineBtn {
+  height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid #e6e8f0;
+  background: #fff; color: #111827; font-weight: 700;
+}
+.outlineBtn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Timeline */
+.filters { display: flex; gap: 6px; }
+.chip {
+  height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid #e6e8f0;
+  background: #fff; color: #111827; font-size: 12px;
+}
+.chip:disabled { opacity: .6; }
+.chipActive { border-color: #3b82f6; background: #eff6ff; color: #1d4ed8; font-weight: 700; }
+
+.timeline { margin: 6px 0 0; padding: 0; list-style: none; }
+.tItem { display: grid; grid-template-columns: 18px 1fr; gap: 10px; position: relative; padding: 10px 0; }
+.tItem:not(:last-child)::after {
+  content: ""; position: absolute; left: 8px; top: 38px; bottom: -2px; width: 2px; background: #eef0f5;
+}
+.tBullet { width: 18px; height: 18px; border-radius: 999px; background: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.15); margin-top: 8px; }
+.tCard { border: 1px solid #eef0f5; border-radius: 12px; padding: 10px; background: #fff; }
+.tHeader { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.badgeMuted { padding: 2px 8px; font-size: 11px; border-radius: 999px; background: #f1f5f9; color: #334155; font-weight: 700; }
+.tBody { color: #475569; font-size: 14px; margin-bottom: 8px; }
+.tFooter { display: flex; gap: 12px; }
+.linkBtn { background: none; border: none; color: #3b82f6; font-weight: 700; cursor: pointer; }
+.linkBtn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Empty */
+.empty { text-align: center; padding: 32px 8px; color: #64748b; }
+.emptyIcon { font-size: 28px; margin-bottom: 6px; }
+.emptyTitle { font-weight: 800; color: #1b2559; }
+.emptyText { margin-top: 4px; }
+
+/* util por si quieres ocultar un label accesible */
+.srOnly {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}

@@ -11,6 +11,10 @@ export default defineConfig({
         target: "http://localhost:5092",
         changeOrigin: true,
       },
+      "/api/recetas": { 
+        target: "http://localhost:5092", 
+        changeOrigin: true 
+      },
       "/api": {
         target: "http://localhost:5151",
         changeOrigin: true,
