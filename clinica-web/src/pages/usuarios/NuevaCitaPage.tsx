@@ -1,3 +1,4 @@
+// src/pages/NuevaCitaPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./NuevaCitaPage.module.css";
@@ -7,6 +8,7 @@ import {
 } from "@/features/medicos/api/MedicosController";
 import type { Medico } from "@/features/medicos/models/Medico";
 import { crearCita } from "@/features/citas/api/citas";
+import { obtenerIdPacientePorUsuario } from "@/features/usuarios/api/usuarios";
 
 function cx(...xs: Array<string | false | null | undefined>) {
   return xs.filter(Boolean).join(" ");
@@ -30,7 +32,40 @@ const toDateTimeParam = (yyyyMMdd: string) => `${yyyyMMdd}T00:00:00`;
 export default function NuevaCitaPage() {
   const nav = useNavigate();
 
-  // Datos desde API
+  // -------- Paciente (desde usuario logueado) --------
+  const [idPaciente, setIdPaciente] = useState<number | null>(null);
+  const [loadingPaciente, setLoadingPaciente] = useState(true);
+  const [errorPaciente, setErrorPaciente] = useState<string | null>(null);
+
+  useEffect(() => {
+    const ac = new AbortController();
+    (async () => {
+      try {
+        setLoadingPaciente(true);
+        setErrorPaciente(null);
+
+        // 1) Lee usuario del localStorage (mismo patrón que MisCitasPage)
+        const raw = localStorage.getItem("user");
+        if (!raw) throw new Error("No hay sesión de usuario");
+        const user = JSON.parse(raw);
+        const idUsuario = Number(user?.id);
+        if (!idUsuario) throw new Error("Usuario inválido");
+
+        // 2) Mapea usuario → paciente
+        const pid = await obtenerIdPacientePorUsuario(idUsuario, ac.signal);
+        if (!pid) throw new Error("No se encontró el paciente vinculado");
+        setIdPaciente(pid);
+      } catch (e: any) {
+        if (e?.name === "AbortError") return;
+        setErrorPaciente(e?.message || "Error al obtener el paciente");
+      } finally {
+        setLoadingPaciente(false);
+      }
+    })();
+    return () => ac.abort();
+  }, []);
+
+  // -------- Médicos / disponibilidad --------
   const [doctores, setDoctores] = useState<Medico[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
   const [errorDocs, setErrorDocs] = useState<string | null>(null);
@@ -70,17 +105,11 @@ export default function NuevaCitaPage() {
   }, []);
 
   const especialidades = useMemo(
-    () => [
-      "Todas",
-      ...Array.from(new Set(doctores.map((d) => d.especialidad))),
-    ],
+    () => ["Todas", ...Array.from(new Set(doctores.map((d) => d.especialidad)))],
     [doctores]
   );
   const medicos = useMemo(
-    () => [
-      "Todos",
-      ...Array.from(new Set(doctores.map((d) => d.nombreCompleto))),
-    ],
+    () => ["Todos", ...Array.from(new Set(doctores.map((d) => d.nombreCompleto)))],
     [doctores]
   );
 
@@ -131,27 +160,27 @@ export default function NuevaCitaPage() {
     return () => ac.abort();
   }, [doctorSel, fechaSel]);
 
-  const puedeAgendar = Boolean(doctorSel && fechaSel && horaSel);
+  const puedeAgendar =
+    Boolean(doctorSel && fechaSel && horaSel) &&
+    !saving &&
+    !!idPaciente &&
+    !loadingPaciente &&
+    !errorPaciente;
 
   const onAgendar = async () => {
-    if (!doctorSel || !fechaSel || !horaSel || saving) return;
+    if (!doctorSel || !fechaSel || !horaSel || saving || !idPaciente) return;
 
     try {
       setSaving(true);
 
-      // TODO: tomar idPaciente de tu auth/contexto
       const payload = {
-        idPaciente: 1,
+        idPaciente,             // ← ya no está quemado
         idMedico: doctorSel.id,
         fecha: toZulu(fechaSel, horaSel), // "YYYY-MM-DDTHH:mm:00.000Z"
       };
 
       const res = await crearCita(payload);
-
-      // Opcional: alerta con el mensaje del backend
       alert(res.message);
-
-      // Redirige al listado
       nav("/citas");
     } catch (e: any) {
       alert(e?.message || "No se pudo crear la cita.");
@@ -173,9 +202,7 @@ export default function NuevaCitaPage() {
       {/* Encabezado */}
       <div className={styles.header}>
         <div className={styles.brand}>
-          <div className={styles.brandIcon} aria-hidden>
-            +
-          </div>
+          <div className={styles.brandIcon} aria-hidden>+</div>
           <div>
             <p className={styles.brandLabel}>Clínica</p>
             <h1 className={styles.title}>Gestión de Citas</h1>
@@ -184,7 +211,15 @@ export default function NuevaCitaPage() {
         <p className={styles.headerHelp}>Programa y administra tus citas</p>
       </div>
 
-      <div className={styles.layout}>
+      {/* Estado del paciente */}
+      {loadingPaciente && <div className={styles.empty}>Cargando paciente…</div>}
+      {errorPaciente && (
+        <div className={styles.error}>
+          {errorPaciente}
+        </div>
+      )}
+
+      <div className={styles.layout} aria-disabled={loadingPaciente || !!errorPaciente}>
         {/* Columna izquierda */}
         <div className={styles.leftCol}>
           {/* Filtros */}
@@ -194,12 +229,10 @@ export default function NuevaCitaPage() {
               <select
                 value={filtroMedico}
                 onChange={(e) => setFiltroMedico(e.target.value)}
-                disabled={loadingDocs || !!errorDocs || doctores.length === 0}
+                disabled={loadingDocs || !!errorDocs || doctores.length === 0 || loadingPaciente || !!errorPaciente}
               >
                 {medicos.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
+                  <option key={m} value={m}>{m}</option>
                 ))}
               </select>
             </label>
@@ -209,12 +242,10 @@ export default function NuevaCitaPage() {
               <select
                 value={filtroEsp}
                 onChange={(e) => setFiltroEsp(e.target.value)}
-                disabled={loadingDocs || !!errorDocs || doctores.length === 0}
+                disabled={loadingDocs || !!errorDocs || doctores.length === 0 || loadingPaciente || !!errorPaciente}
               >
                 {especialidades.map((e) => (
-                  <option key={e} value={e}>
-                    {e}
-                  </option>
+                  <option key={e} value={e}>{e}</option>
                 ))}
               </select>
             </label>
@@ -222,66 +253,48 @@ export default function NuevaCitaPage() {
 
           {/* Lista doctores */}
           <div className={styles.doctorsGrid}>
-            {loadingDocs && (
-              <div className={styles.empty}>Cargando médicos…</div>
-            )}
+            {loadingDocs && <div className={styles.empty}>Cargando médicos…</div>}
             {errorDocs && <div className={styles.empty}>{errorDocs}</div>}
 
             {!loadingDocs && !errorDocs && doctoresFiltrados.length === 0 && (
-              <div className={styles.empty}>
-                No hay médicos para el filtro seleccionado.
-              </div>
+              <div className={styles.empty}>No hay médicos para el filtro seleccionado.</div>
             )}
 
-            {!loadingDocs &&
-              !errorDocs &&
-              doctoresFiltrados.map((d) => (
-                <article
-                  key={d.id}
-                  className={cx(
-                    styles.card,
-                    doctorSel?.id === d.id && styles.cardSelected
-                  )}
-                >
-                  <div className={styles.cardAvatar} aria-hidden>
-                    👩‍⚕️
+            {!loadingDocs && !errorDocs && doctoresFiltrados.map((d) => (
+              <article
+                key={d.id}
+                className={cx(styles.card, doctorSel?.id === d.id && styles.cardSelected)}
+              >
+                <div className={styles.cardAvatar} aria-hidden>👩‍⚕️</div>
+                <div className={styles.cardBody}>
+                  <h3 className={styles.cardTitle}>{d.nombreCompleto}</h3>
+                  <p className={styles.cardSpec}>{d.especialidad}</p>
+                  <div className={styles.cardActions}>
+                    <button
+                      type="button"
+                      className={styles.btnPrimary}
+                      onClick={() => setDoctorSel(d)}
+                      disabled={loadingPaciente || !!errorPaciente}
+                    >
+                      Seleccionar
+                    </button>
                   </div>
-                  <div className={styles.cardBody}>
-                    <h3 className={styles.cardTitle}>{d.nombreCompleto}</h3>
-                    <p className={styles.cardSpec}>{d.especialidad}</p>
-                    <div className={styles.cardActions}>
-                      <button
-                        type="button"
-                        className={styles.btnPrimary}
-                        onClick={() => setDoctorSel(d)}
-                      >
-                        Seleccionar
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              ))}
+                </div>
+              </article>
+            ))}
           </div>
 
           {/* Resumen */}
           <div className={styles.summary}>
-            <span>
-              <strong>Doctor:</strong>{" "}
-              {doctorSel ? doctorSel.nombreCompleto : "—"}
-            </span>
+            <span><strong>PacienteID:</strong> {idPaciente ?? "—"}</span>
             <span className={styles.sep}>›</span>
-            <span>
-              <strong>Especialidad:</strong>{" "}
-              {doctorSel ? doctorSel.especialidad : "—"}
-            </span>
+            <span><strong>Doctor:</strong> {doctorSel ? doctorSel.nombreCompleto : "—"}</span>
             <span className={styles.sep}>›</span>
-            <span>
-              <strong>Fecha:</strong> {formatDate(fechaSel)}
-            </span>
+            <span><strong>Especialidad:</strong> {doctorSel ? doctorSel.especialidad : "—"}</span>
             <span className={styles.sep}>›</span>
-            <span>
-              <strong>Hora:</strong> {horaSel || "—"}
-            </span>
+            <span><strong>Fecha:</strong> {formatDate(fechaSel)}</span>
+            <span className={styles.sep}>›</span>
+            <span><strong>Hora:</strong> {horaSel || "—"}</span>
           </div>
         </div>
 
@@ -295,7 +308,7 @@ export default function NuevaCitaPage() {
               type="date"
               value={fechaSel ?? ""}
               onChange={(e) => setFechaSel(e.target.value || null)}
-              disabled={!doctorSel} // fecha se habilita tras elegir doctor
+              disabled={!doctorSel || loadingPaciente || !!errorPaciente}
             />
           </label>
 
@@ -309,48 +322,36 @@ export default function NuevaCitaPage() {
                 !fechaSel ||
                 loadingDisp ||
                 !!errorDisp ||
-                horarios.length === 0
+                horarios.length === 0 ||
+                loadingPaciente ||
+                !!errorPaciente
               }
             >
               <option value="">
                 {loadingDisp ? "Cargando..." : "Selecciona hora"}
               </option>
               {horarios.map((h) => (
-                <option key={h} value={h}>
-                  {h}
-                </option>
+                <option key={h} value={h}>{h}</option>
               ))}
             </select>
-            {!loadingDisp &&
-              !errorDisp &&
-              doctorSel &&
-              fechaSel &&
-              horarios.length === 0 && (
-                <small className={styles.muted}>
-                  No hay horarios disponibles para ese día.
-                </small>
-              )}
+            {!loadingDisp && !errorDisp && doctorSel && fechaSel && horarios.length === 0 && (
+              <small className={styles.muted}>No hay horarios disponibles para ese día.</small>
+            )}
             {errorDisp && <small className={styles.muted}>{errorDisp}</small>}
           </label>
 
           <div className={styles.actions}>
             <button
               type="button"
-              className={cx(
-                styles.btnPrimary,
-                (!puedeAgendar || saving) && styles.btnDisabled
-              )}
+              className={cx(styles.btnPrimary, (!puedeAgendar || saving) && styles.btnDisabled)}
               onClick={onAgendar}
-              disabled={!puedeAgendar || saving}
+              disabled={!puedeAgendar}
+              title={!idPaciente ? "Cargando paciente…" : undefined}
             >
               {saving ? "Agendando..." : "Agendar"}
             </button>
 
-            <button
-              type="button"
-              className={styles.btnGhost}
-              onClick={onCancelar}
-            >
+            <button type="button" className={styles.btnGhost} onClick={onCancelar}>
               Cancelar
             </button>
           </div>

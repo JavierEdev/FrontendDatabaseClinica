@@ -1,9 +1,10 @@
+// src/pages/MisCitasPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { obtenerIdPacientePorUsuario } from "@/features/usuarios/api/usuarios";
 import { fetchCitasPorPaciente } from "@/features/citas/api/citas";
-import type { Cita } from "@/features/citas/api/citas";
-import { logout } from "@/features/auth/api/api"; // ← importa logout
+import type { CitaPaciente as Cita } from "@/features/citas/model/citas";
+import { logout } from "@/features/auth/api/api";
 import styles from "./MisCitasPage.module.css";
 
 type Filtro = "TODAS" | "CONFIRMADAS" | "CANCELADAS" | "PENDIENTES";
@@ -104,7 +105,7 @@ export default function MisCitasPage() {
           type="button"
           className={styles.btnOutline}
           onClick={logout}
-          style={{ marginLeft: "auto" }} // empuja a la derecha en el flex
+          style={{ marginLeft: "auto" }}
           title="Cerrar sesión"
         >
           Cerrar sesión
@@ -140,12 +141,6 @@ export default function MisCitasPage() {
                   </div>
                 </div>
                 <div className={styles.actions}>
-                  <button
-                    className={styles.btnOutline}
-                    onClick={() => nav(`/citas/${cita.id}/editar`)}
-                  >
-                    Modificar
-                  </button>
                   <button
                     className={styles.btnDanger}
                     onClick={() => nav(`/citas/${cita.id}/cancelar`)}
