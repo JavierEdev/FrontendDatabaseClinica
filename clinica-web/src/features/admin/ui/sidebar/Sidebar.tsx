@@ -34,8 +34,8 @@ const GROUPS: Group[] = [
     label: "Administrador",
     icon: "🩺",
     items: [
-      { label: "Crear usuarios", disabled: true },
-      { label: "Ver usuarios", disabled: true },
+      { label: "Crear usuarios", to: "/admin/usuarios/crear"},
+      { label: "Ver usuarios", to: "/admin/usuarios" },
     ],
   },
   {

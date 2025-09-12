@@ -16,6 +16,8 @@ import MedicosListPage from "@/pages/admin/medicos/MedicosListPage";
 import AdminCitasList from "@/pages/admin/citas/AdminCitasList";;
 import CitaDetallePage from "@/pages/admin/citas/CitaDetallePage";
 import HistorialPage from "@/pages/admin/historial/HistorialPage";
+import UsuariosListPage from "@/pages/admin/usuarios/List";
+import CrearUsuarioPage from "@/pages/admin/usuarios/Crear";
 
 // Protegidas generales
 import { ProtectedRoute } from "@/features/auth/guards/ProtectedRoute";
@@ -81,6 +83,8 @@ export function AppRoutes() {
         <Route path="pacientes/nuevo" element={<AgregarPacientePage />} />
         <Route path="medicos" element={<MedicosListPage />} />
         <Route path="historial" element={<HistorialPage />} />
+        <Route path="usuarios" element={<UsuariosListPage />} />
+        <Route path="usuarios/crear" element={<CrearUsuarioPage />} />
         {/* agrega más rutas hijas aquí */}
       </Route>
 
