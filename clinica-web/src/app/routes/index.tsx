@@ -11,6 +11,7 @@ import AdminLayout from "@/pages/admin/AdminLayout";
 import AdminHomePage from "@/pages/admin/AdminHomePage";
 import CitasPage from "@/pages/admin/citas/CitasPage";
 import PacientesListPage from "@/pages/admin/pacientes/List";
+import NuevaCitaAdminPage from "@/pages/admin/pacientes/NuevaCitaAdminPage";
 import AgregarPacientePage from "@/pages/admin/pacientes/AgregarPacientePage";
 import MedicosListPage from "@/pages/admin/medicos/MedicosListPage";
 import AdminCitasList from "@/pages/admin/citas/AdminCitasList";;
@@ -85,6 +86,7 @@ export function AppRoutes() {
         <Route path="historial" element={<HistorialPage />} />
         <Route path="usuarios" element={<UsuariosListPage />} />
         <Route path="usuarios/crear" element={<CrearUsuarioPage />} />
+        <Route path="/admin/citas/nueva" element={<NuevaCitaAdminPage />} />
         {/* agrega más rutas hijas aquí */}
       </Route>
 
