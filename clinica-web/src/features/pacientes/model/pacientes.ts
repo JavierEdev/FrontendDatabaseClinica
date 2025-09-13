@@ -67,3 +67,17 @@ export type PacienteDetalleResponse = {
   estadoCivil?: string;
   contactosEmergencia: ContactoEmergenciaResponseDetallePaciente[];
 };
+
+export type NuevoContactoEmergencia = {
+  nombre: string;
+  parentesco: string;
+  telefono?: string;
+};
+
+export type ContactoEmergenciaCreado = {
+  idContacto: number;
+  idPaciente: number;
+  nombre: string;
+  parentesco: string;
+  telefono?: string;
+};

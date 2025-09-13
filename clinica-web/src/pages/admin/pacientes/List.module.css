@@ -77,3 +77,236 @@
 @keyframes sk { 0%{background-position:0 0} 100%{background-position: -400% 0} }
 
 .name { font-weight: 600; }
+
+/* === Modal overlay + panel === */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45); /* slate-900/45 */
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  width: min(560px, calc(100% - 32px));
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(2, 6, 23, 0.35);
+  overflow: hidden;
+  animation: modalPop .14s ease-out;
+}
+
+@keyframes modalPop {
+  from { transform: translateY(8px) scale(.98); opacity: .8; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.modalHeader {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.modalClose {
+  appearance: none;
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.modalBody {
+  padding: 14px 16px 16px;
+}
+
+.modalHint {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  color: #475569;
+  border-radius: 12px;
+  padding: 8px 10px;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.modalForm {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.modalActions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.modalForm input[type="text"],
+.modalForm input[type="tel"],
+.modalForm input[type="email"] {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 14px;
+  outline: none;
+}
+.modalForm input:focus {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+  border-color: var(--primary-600);
+}
+
+/* Separador usado entre etiquetas (· o ›) */
+.sep {
+  color: #94a3b8;
+  margin: 0 6px;
+}
+
+/* === Modal overlay + panel (match UI) === */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  /* opcional: sutil blur */
+  backdrop-filter: saturate(120%) blur(2px);
+}
+
+.modal {
+  width: min(560px, calc(100% - 32px));
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(2, 6, 23, 0.25);
+  overflow: hidden;
+  animation: modalPop .14s ease-out;
+}
+
+@keyframes modalPop {
+  from { transform: translateY(6px) scale(.98); opacity: .85; }
+  to   { transform: translateY(0) scale(1);     opacity: 1; }
+}
+
+.modalHeader {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.modalClose {
+  appearance: none;
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  color: #64748b;
+  border-radius: 8px;
+  padding: 2px 6px;
+}
+.modalClose:hover { background: #f1f5f9; }
+
+.modalBody {
+  padding: 16px;
+}
+
+.modalHint {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  color: #475569;
+  border-radius: 12px;
+  padding: 8px 10px;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.sep { color: #94a3b8; margin: 0 6px; }
+
+/* Campos (idéntico a tu UI) */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+  color: #334155;
+  font-size: 14px;
+}
+.field input[type="text"],
+.field input[type="tel"],
+.field input[type="email"] {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+}
+.field input:focus {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+  border-color: var(--primary-600);
+}
+
+/* Acciones del modal con tus botones */
+.modalActions {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* === Botones (match con tu página de citas) === */
+.btnPrimary,
+.btnGhost {
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease, border-color .15s ease, opacity .15s ease;
+}
+
+.btnPrimary {
+  background: var(--primary-600);
+  color: white;
+  border: 1px solid var(--primary-600);
+}
+.btnPrimary:hover { background: var(--primary-700); }
+
+.btnGhost {
+  background: white;
+  color: #334155;
+  border: 1px solid var(--border);
+}
+.btnGhost:hover { background: #f8fafc; }
+
+.btnDisabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
