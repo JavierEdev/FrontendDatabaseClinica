@@ -1,6 +1,6 @@
 ##MOCK DATA
 
-##Catalogos Mock
+$##Catalogos Mock
 INSERT INTO CatalogoProcedimientos
   (codigo, nombre, descripcion, precio_base, duracion_min, activo)
 VALUES
