@@ -19,6 +19,12 @@ const GROUPS: Group[] = [
     items: [
       { label: "Lista de Pacientes", to: "/admin/pacientes" },
       { label: "Agregar Pacientes", to: "/admin/pacientes/nuevo" },
+    ],
+  },
+  {
+    label: "Historial",
+    icon: "👤",
+    items: [
       { label: "Historial Médico", to: "/admin/Historial" },
     ],
   },
