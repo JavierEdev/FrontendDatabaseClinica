@@ -81,3 +81,15 @@ export type ContactoEmergenciaCreado = {
   parentesco: string;
   telefono?: string;
 };
+
+export type InfoMedicaInicialUpdate = {
+  idPaciente: number;
+  antecedentes: string;
+  alergias: string;
+  enfermedadesCronicas: string;
+};
+
+export type InfoMedicaInicialResponse = {
+  idAntecedente: number;
+  idPaciente: number;
+};

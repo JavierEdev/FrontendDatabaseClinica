@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import styles from "./List.module.css";
 import { listarPacientes } from "@/features/pacientes/api/pacientes";
 import { api } from "@/features/auth/api/api";
+import InitialMedicalInfoModal from "@/features/pacientes/components/InitialMedicalInfoModal";
 
 type PacienteItem = {
   idPaciente: number;
@@ -54,18 +55,13 @@ function EmergencyContactModal({
 
   useEffect(() => {
     if (open) {
-      setNombre("");
-      setParentesco("");
-      setTelefono("");
-      setErr(null);
+      setNombre(""); setParentesco(""); setTelefono(""); setErr(null);
     }
   }, [open]);
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
@@ -80,7 +76,6 @@ function EmergencyContactModal({
 
     try {
       setSaving(true);
-      // POST /api/Pacientes/{idPaciente}/contactos  { idPaciente, nombre, parentesco, telefono }
       await api<any>(`/api/Pacientes/${paciente.idPaciente}/contactos`, {
         method: "POST",
         auth: true,
@@ -183,9 +178,12 @@ export default function PacientesListPage() {
   const [q, setQ] = useState("");
   const [sortAsc, setSortAsc] = useState(true);
 
-  // estado del modal
+  // estado modales
   const [modalOpen, setModalOpen] = useState(false);
   const [pacienteForModal, setPacienteForModal] = useState<PacienteItem | null>(null);
+
+  const [imiOpen, setImiOpen] = useState(false);
+  const [pacienteForImi, setPacienteForImi] = useState<PacienteItem | null>(null);
 
   const nav = useNavigate();
 
@@ -223,14 +221,11 @@ export default function PacientesListPage() {
   const from = data ? (data.page - 1) * data.pageSize + 1 : 0;
   const to = data ? Math.min(data.page * data.pageSize, data.total) : 0;
 
-  const openModalFor = (p: PacienteItem) => {
-    setPacienteForModal(p);
-    setModalOpen(true);
-  };
-  const closeModal = () => {
-    setModalOpen(false);
-    setPacienteForModal(null);
-  };
+  const openEmergencyFor = (p: PacienteItem) => { setPacienteForModal(p); setModalOpen(true); };
+  const closeEmergency = () => { setModalOpen(false); setPacienteForModal(null); };
+
+  const openImiFor = (p: PacienteItem) => { setPacienteForImi(p); setImiOpen(true); };
+  const closeImi = () => { setImiOpen(false); setPacienteForImi(null); };
 
   return (
     <div className={styles.wrap}>
@@ -306,7 +301,8 @@ export default function PacientesListPage() {
                   <td className={`${styles.right} ${styles.actions}`}>
                     <button onClick={() => nav(`/admin/pacientes/${p.idPaciente}`)}>Ver</button>
                     <button onClick={() => nav(`/admin/citas/nueva?paciente=${p.idPaciente}`)}>Nueva cita</button>
-                    <button onClick={() => openModalFor(p)}>Agregar contacto de emergencia</button>
+                    <button onClick={() => openEmergencyFor(p)}>Agregar contacto de emergencia</button>
+                    <button onClick={() => openImiFor(p)}>Info médica inicial</button>
                   </td>
                 </tr>
               ))}
@@ -335,13 +331,27 @@ export default function PacientesListPage() {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Modal: contacto emergencia */}
       <EmergencyContactModal
         open={modalOpen}
         paciente={pacienteForModal}
-        onClose={closeModal}
-        onCreated={() => {
-        }}
+        onClose={closeEmergency}
+        onCreated={() => {}}
+      />
+
+      {/* Modal: info médica inicial */}
+      <InitialMedicalInfoModal
+        open={imiOpen}
+        paciente={
+          pacienteForImi && {
+            idPaciente: pacienteForImi.idPaciente,
+            nombres: pacienteForImi.nombres,
+            apellidos: pacienteForImi.apellidos,
+            dpi: pacienteForImi.dpi,
+          }
+        }
+        onClose={closeImi}
+        onSaved={() => {}}
       />
     </div>
   );
