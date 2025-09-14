@@ -21,6 +21,8 @@ import UsuariosListPage from "@/pages/admin/usuarios/List";
 import CrearUsuarioPage from "@/pages/admin/usuarios/Crear";
 import AgregarMedicoPage from "@/pages/admin/medicos/AgregarMedicoPage";
 import BusquedaPorDpiPage from "@/pages/admin/historial/BusquedaPorDpiPage";
+import RecetaListPage from "@/pages/admin/recetas/ListRecetas";
+import RecetaCrearPage from "@/pages/admin/recetas/CrearRecetas";
 
 // Protegidas generales
 import { ProtectedRoute } from "@/features/auth/guards/ProtectedRoute";
@@ -91,6 +93,8 @@ export function AppRoutes() {
         <Route path="/admin/citas/nueva" element={<NuevaCitaAdminPage />} />
         <Route path="medicos/nuevo" element={<AgregarMedicoPage />} />
         <Route path="historial/nuevo" element={<BusquedaPorDpiPage />} />
+        <Route path="recetas" element={<RecetaListPage/>} />
+        <Route path="recetas/crear" element={<RecetaCrearPage/>} />
         {/* agrega más rutas hijas aquí */}
       </Route>
 

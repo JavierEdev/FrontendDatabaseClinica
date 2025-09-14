@@ -30,6 +30,14 @@ const GROUPS: Group[] = [
     ],
   },
   {
+    label: "Recetas y Medicamentos",
+    icon: "💊📋",
+    items: [
+      { label: "Listado de recetas", to: "/admin/recetas" }, 
+      { label: "Crear receta", to: "/admin/recetas/crear" }, 
+    ],
+  },
+  {
     label: "Médicos",
     icon: "🩺",
     items: [
@@ -41,8 +49,8 @@ const GROUPS: Group[] = [
     label: "Administrador",
     icon: "👨‍💼",
     items: [
+      { label: "Lista de usuarios", to: "/admin/usuarios" },
       { label: "Crear usuarios", to: "/admin/usuarios/crear"},
-      { label: "Ver usuarios", to: "/admin/usuarios" },
     ],
   },
 ];
