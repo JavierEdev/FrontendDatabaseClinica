@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { fetchCitaDetalle } from "@/features/citas/api/citas";
+import { fetchCitaDetalle, cancelarCita } from "@/features/citas/api/citas";
 import type { CitaDetalle } from "@/features/citas/model/citas";
 
 import { fetchPacienteById } from "@/features/pacientes/api/pacientes";
@@ -10,10 +10,18 @@ import { fetchMedicoById } from "@/features/medicos/api/MedicosController";
 import type { MedicoDetalleResponse } from "@/features/medicos/models/Medico";
 
 import styles from "./CitaDetallePage.module.css";
+import "bootstrap/dist/css/bootstrap.min.css";
+import RescheduleCitaModal from "@/features/citas/components/RescheduleCitaModal";
+import { reprogramarCita } from "@/features/citas/api/citas";
+
+import CancelCitaModal from "@/features/citas/components/CancelCitaModal";
 
 function fmtDT(iso: string) {
   const d = new Date(iso);
-  return new Intl.DateTimeFormat("es-GT", { dateStyle: "full", timeStyle: "short" }).format(d);
+  return new Intl.DateTimeFormat("es-GT", {
+    dateStyle: "full",
+    timeStyle: "short",
+  }).format(d);
 }
 function calcEdad(iso?: string | null) {
   if (!iso) return null;
@@ -28,7 +36,10 @@ function calcEdad(iso?: string | null) {
 
 export default function CitaDetallePage() {
   const nav = useNavigate();
-  const { idPaciente, idCita } = useParams<{ idPaciente: string; idCita: string }>();
+  const { idPaciente, idCita } = useParams<{
+    idPaciente: string;
+    idCita: string;
+  }>();
 
   const [det, setDet] = useState<CitaDetalle | null>(null);
   const [pac, setPac] = useState<PacienteDetalleResponse | null>(null);
@@ -36,6 +47,15 @@ export default function CitaDetallePage() {
 
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+
+  // cancelar modal
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelSaving, setCancelSaving] = useState(false);
+  const [cancelErr, setCancelErr] = useState<string | null>(null);
+
+  const [reOpen, setReOpen] = useState(false);
+  const [reSaving, setReSaving] = useState(false);
+  const [reErr, setReErr] = useState<string | null>(null);
 
   // Carga cita + paciente en paralelo
   useEffect(() => {
@@ -62,7 +82,8 @@ export default function CitaDetallePage() {
         setDet(detResp);
         setPac(pacResp);
       } catch (e: any) {
-        if (e?.name === "AbortError" || String(e?.message).includes("aborted")) return;
+        if (e?.name === "AbortError" || String(e?.message).includes("aborted"))
+          return;
         if (!alive) return;
         setErr(e?.message ?? "Error al cargar datos");
       } finally {
@@ -70,10 +91,13 @@ export default function CitaDetallePage() {
       }
     })();
 
-    return () => { alive = false; ctrl.abort(); };
+    return () => {
+      alive = false;
+      ctrl.abort();
+    };
   }, [idPaciente, idCita]);
 
-  // Cuando ya tenemos idMedico de la cita, cargar médico
+  // Médico
   useEffect(() => {
     if (!det?.idMedico) return;
     const ctrl = new AbortController();
@@ -86,10 +110,50 @@ export default function CitaDetallePage() {
         if ((e as any)?.name === "AbortError") return;
       }
     })();
-    return () => { alive = false; ctrl.abort(); };
+    return () => {
+      alive = false;
+      ctrl.abort();
+    };
   }, [det?.idMedico]);
 
-  const edad = useMemo(() => calcEdad(pac?.fechaNacimiento), [pac?.fechaNacimiento]);
+  const edad = useMemo(
+    () => calcEdad(pac?.fechaNacimiento),
+    [pac?.fechaNacimiento]
+  );
+
+  const onConfirmCancel = async (razon: string) => {
+    if (!det) return;
+    try {
+      setCancelSaving(true);
+      setCancelErr(null);
+      await cancelarCita(det.id, razon);
+      setDet({ ...det, estado: "CANCELADA" });
+      setCancelOpen(false);
+      alert("Cita cancelada.");
+    } catch (e: any) {
+      setCancelErr(e?.message || "No se pudo cancelar la cita.");
+    } finally {
+      setCancelSaving(false);
+    }
+  };
+
+  const onConfirmReschedule = async (nuevaFechaIso: string, motivo: string) => {
+    if (!det) return;
+    try {
+      setReSaving(true);
+      setReErr(null);
+      const ok = await reprogramarCita(det.id, nuevaFechaIso, motivo);
+      if (!ok) throw new Error("No se pudo reprogramar la cita.");
+      // refresca estado local
+      setDet({ ...det, fecha: nuevaFechaIso, estado: "REPROGRAMADA" });
+      setReOpen(false);
+      alert("Cita reprogramada.");
+    } catch (e: any) {
+      setReErr(e?.message || "Error al reprogramar.");
+    } finally {
+      setReSaving(false);
+    }
+  };
 
   if (loading) return <div className={styles.page}>Cargando…</div>;
   if (err) return <div className={styles.page}>Error: {err}</div>;
@@ -98,7 +162,9 @@ export default function CitaDetallePage() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <button className={styles.backBtn} onClick={() => nav(-1)}>← Regresar</button>
+        <button className={styles.backBtn} onClick={() => nav(-1)}>
+          ← Regresar
+        </button>
         <h1 className={styles.title}>Cita #{det.id}</h1>
       </header>
 
@@ -108,11 +174,47 @@ export default function CitaDetallePage() {
           <Row label="Fecha / hora" value={fmtDT(det.fecha)} />
           <Row
             label="Estado"
-            value={<span className={`${styles.badge} ${styles[`st_${det.estado}`] || ""}`}>{det.estado.toLowerCase()}</span>}
+            value={
+              <span
+                className={`${styles.badge} ${
+                  styles[`st_${det.estado}`] || ""
+                }`}
+              >
+                {det.estado.toLowerCase()}
+              </span>
+            }
           />
         </div>
         <div className={styles.actions}>
-          <Link to="/admin/citas" className={styles.btnSec}>Volver al listado</Link>
+          <Link to="/admin/citas" className="btn btn-secondary">
+            Volver al listado
+          </Link>
+
+          {det.estado !== "CANCELADA" && (
+            <>
+              <button
+                type="button"
+                className="btn btn-info ms-2"
+                onClick={() => {
+                  setReErr(null);
+                  setReOpen(true);
+                }}
+              >
+                Reprogramar cita
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-danger ms-2"
+                onClick={() => {
+                  setCancelErr(null);
+                  setCancelOpen(true);
+                }}
+              >
+                Cancelar cita
+              </button>
+            </>
+          )}
         </div>
       </section>
 
@@ -122,9 +224,17 @@ export default function CitaDetallePage() {
         <article className={styles.card}>
           <div className={styles.cardTitle}>Paciente</div>
           <div className={styles.rows}>
-            <Row label="Nombre" value={pac ? `${pac.nombres} ${pac.apellidos}` : "—"} />
+            <Row
+              label="Nombre"
+              value={pac ? `${pac.nombres} ${pac.apellidos}` : "—"}
+            />
             <Row label="DPI" value={pac?.dpi ?? "—"} />
-            <Row label="Edad / Sexo" value={`${edad ?? "—"} ${edad !== null ? "años" : ""}${pac?.sexo ? ` · ${pac.sexo}` : ""}`} />
+            <Row
+              label="Edad / Sexo"
+              value={`${edad ?? "—"} ${edad !== null ? "años" : ""}${
+                pac?.sexo ? ` · ${pac.sexo}` : ""
+              }`}
+            />
             <Row label="Teléfono" value={pac?.telefono ?? "—"} />
             <Row label="Correo" value={pac?.correo ?? "—"} />
             <Row label="Dirección" value={pac?.direccion ?? "—"} />
@@ -136,7 +246,11 @@ export default function CitaDetallePage() {
             <div className={styles.tableWrap}>
               <table className={styles.miniTable}>
                 <thead>
-                  <tr><th>Nombre</th><th>Parentesco</th><th>Teléfono</th></tr>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Parentesco</th>
+                    <th>Teléfono</th>
+                  </tr>
                 </thead>
                 <tbody>
                   {pac!.contactosEmergencia.map((c) => (
@@ -154,7 +268,9 @@ export default function CitaDetallePage() {
           )}
 
           <div className={styles.actions}>
-            <Link to="/admin/pacientes" className={styles.btnSec}>Ver pacientes</Link>
+            <Link to="/admin/pacientes" className={styles.btnSec}>
+              Ver pacientes
+            </Link>
           </div>
         </article>
 
@@ -162,7 +278,10 @@ export default function CitaDetallePage() {
         <article className={styles.card}>
           <div className={styles.cardTitle}>Médico</div>
           <div className={styles.rows}>
-            <Row label="Nombre" value={med ? `${med.nombres} ${med.apellidos}` : "—"} />
+            <Row
+              label="Nombre"
+              value={med ? `${med.nombres} ${med.apellidos}` : "—"}
+            />
             <Row label="Colegiado" value={med?.numeroColegiado ?? "—"} />
             <Row label="Especialidad" value={med?.especialidad ?? "—"} />
             <Row label="Teléfono" value={med?.telefono ?? "—"} />
@@ -170,10 +289,37 @@ export default function CitaDetallePage() {
             <Row label="Horario" value={med?.horario ?? "—"} />
           </div>
           <div className={styles.actions}>
-            <Link to="/admin/medicos" className={styles.btnSec}>Ver médicos</Link>
+            <Link to="/admin/medicos" className={styles.btnSec}>
+              Ver médicos
+            </Link>
           </div>
         </article>
       </section>
+
+      <RescheduleCitaModal
+        open={reOpen}
+        citaId={det?.id ?? null}
+        currentFechaIso={det?.fecha}
+        onClose={() => {
+          setReErr(null);
+          setReOpen(false);
+        }}
+        onConfirm={onConfirmReschedule}
+        loading={reSaving}
+        error={reErr}
+      />
+
+      <CancelCitaModal
+        open={cancelOpen}
+        citaId={det?.id ?? null}
+        onClose={() => {
+          setCancelErr(null);
+          setCancelOpen(false);
+        }}
+        onConfirm={onConfirmCancel}
+        loading={cancelSaving}
+        error={cancelErr}
+      />
     </div>
   );
 }

@@ -61,7 +61,6 @@ export async function listarPacientes(
   return api<ListaPacientesResponse>(url, { method: "GET", auth: true });
 }
 
-// ---------- GET /api/Pacientes/{idPaciente} ----------
 export async function fetchPacienteById(
   idPaciente: number,
   signal?: AbortSignal

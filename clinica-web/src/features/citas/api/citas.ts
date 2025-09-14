@@ -134,7 +134,6 @@ function buildCitaDetalleUrl(idPaciente: number, idCita: number): string {
   return `${buildCitasUrl()}/paciente/${idPaciente}/${idCita}`;
 }
 
-/** GET /api/citas/paciente/{idPaciente}/{idCita}  */
 export async function fetchCitaDetalle(
   idPaciente: number,
   idCita: number,
@@ -158,4 +157,47 @@ export async function fetchCitaDetalle(
     medicoNombre: r.medicoNombre,
     especialidad: r.especialidad,
   };
+}
+
+
+export async function cancelarCita(
+  idCita: number,
+  razon: string,
+  signal?: AbortSignal
+): Promise<{ success: boolean; message?: string; data?: { idCita: number; razon: string } }> {
+  const url = `${buildCitasUrl()}/${idCita}/cancelar`;
+  if (import.meta.env.DEV) console.log("[citas] POST", url, { razon });
+
+  const res = await fetch(url, {
+    method: "POST", // si tu backend usa PUT, cambia aquí a "PUT"
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ razon }),
+    signal,
+  });
+
+  const text = await ensureJson(res, url);
+  const json = JSON.parse(text);
+  if (json?.success === false) throw new Error(json?.message || "No se pudo cancelar la cita");
+  return json;
+}
+
+export async function reprogramarCita(
+  idCita: number,
+  nuevaFechaIso: string,
+  motivo: string,
+  signal?: AbortSignal
+): Promise<boolean> {
+  const url = `${buildCitasUrl()}/${idCita}/reprogramar`;
+  if (import.meta.env.DEV) console.log("[citas] POST", url, { nuevaFecha: nuevaFechaIso, motivo });
+
+  const res = await fetch(url, {
+    method: "POST", // si tu backend usa PUT, cámbialo a "PUT"
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ nuevaFecha: nuevaFechaIso, motivo }),
+    signal,
+  });
+
+  const text = await ensureJson(res, url);
+  const json = JSON.parse(text);
+  return Boolean(json?.success);
 }

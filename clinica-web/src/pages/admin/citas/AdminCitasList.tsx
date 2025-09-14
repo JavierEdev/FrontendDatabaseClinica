@@ -211,8 +211,8 @@ useEffect(() => {
                 <td>#{c.idMedico}</td>
                 <td className={styles.actions}>
                   <button onClick={() => nav(`/admin/citas/${c.idPaciente}/${c.id}`)}>Ver</button>
-                  <button onClick={() => nav(`/pacientes/${c.idPaciente}`)}>Paciente</button>
-                  <button onClick={() => nav(`/medicos/${c.idMedico}`)}>Médico</button>
+                  <button onClick={() => nav(`/pacientes/${c.idPaciente}`)} hidden>Paciente</button>
+                  <button onClick={() => nav(`/medicos/${c.idMedico}`)} hidden>Médico</button>
                 </td>
               </tr>
             ))}
