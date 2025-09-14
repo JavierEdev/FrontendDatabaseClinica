@@ -33,8 +33,7 @@ const GROUPS: Group[] = [
     label: "Imagenologia",
     icon: "🖼️",
     items: [
-      { label: "Historial Imagenes", to: "/admin/imagenologia" },
-      { label: "Agregar Imagene", to: "/admin/imagenologia/nuevo" },
+      { label: "Historial Imagenes", to: "/admin/imagenologia" }
     ],
   },
   {
