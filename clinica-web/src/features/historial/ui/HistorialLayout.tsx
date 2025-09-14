@@ -199,11 +199,6 @@ export default function HistorialLayout({
                   <div className={styles.metaValue}>{paciente.dpi ?? "—"}</div>
                 </div>
               </div>
-
-              <div className={styles.actionsRow}>
-                <button className={styles.outlineBtn} type="button" disabled>Nueva cita</button>
-                <button className={styles.outlineBtn} type="button" disabled>Agregar antecedente</button>
-              </div>
             </>
           )}
         </section>
