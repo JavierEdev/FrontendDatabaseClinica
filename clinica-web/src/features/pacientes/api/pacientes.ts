@@ -7,7 +7,8 @@ import type {
   NuevoContactoEmergencia,
   ContactoEmergenciaCreado,
   CrearConsultaPayload,
-  CrearConsultaResponse
+  CrearConsultaResponse,
+  DocumentosListResponse
 } from "../model/pacientes";
 
 export async function crearPaciente(
@@ -131,4 +132,28 @@ export async function crearConsultaPaciente(
     signal,
     body: JSON.stringify({ ...payload, idPaciente }),
   });
+}
+
+export async function listarDocumentosPaciente(
+  idPaciente: number,
+  page = 1,
+  pageSize = 50,
+  signal?: AbortSignal
+): Promise<DocumentosListResponse> {
+  return api<DocumentosListResponse>(
+    `/api/Pacientes/${idPaciente}/documentos?page=${page}&pageSize=${pageSize}`,
+    { method: "GET", auth: true, signal }
+  );
+}
+
+export async function getDocumentoDownloadUrl(
+  idPaciente: number,
+  idImagen: number,
+  ttlSeconds = 300,
+  signal?: AbortSignal
+): Promise<{ url: string; expiresIn: number }> {
+  return api<{ url: string; expiresIn: number }>(
+    `/api/Pacientes/${idPaciente}/documentos/${idImagen}/download?ttlSeconds=${ttlSeconds}`,
+    { method: "GET", auth: true, signal }
+  );
 }

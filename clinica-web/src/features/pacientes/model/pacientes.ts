@@ -114,3 +114,22 @@ export interface CrearConsultaResponse {
   diagnostico: string;
   observaciones?: string;
 }
+
+export type DocumentoItemApi = {
+  idImagen: number;
+  categoria: "dpi" | "resultado" | "seguro" | (string & {});
+  contentType: string;
+  tamanoBytes: number;
+  fechaDocumento?: string | null;
+  fechaEstudio?: string | null;
+  nombreArchivoOriginal?: string | null;
+  notas?: string | null;
+};
+
+export type DocumentosListResponse = {
+  idPaciente: number;
+  page: number;
+  pageSize: number;
+  total: number;
+  items: DocumentoItemApi[];
+};

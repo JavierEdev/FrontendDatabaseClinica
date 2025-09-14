@@ -555,3 +555,11 @@
 @keyframes popIn {
   to { transform: translateY(0) scale(1) }
 }
+
+.previewPdf {
+  width: 100%;
+  height: 70vh;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+}
