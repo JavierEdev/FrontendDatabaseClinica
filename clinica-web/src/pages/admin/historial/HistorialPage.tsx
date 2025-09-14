@@ -6,6 +6,7 @@ import { useHistorial } from "@/features/historial/hooks/useHistorial";
 import { listarPacientes } from "@/features/pacientes/api/pacientes";
 import type { HistFilter } from "@/features/historial/model/types";
 import { useFotoPaciente } from "@/features/pacientes/hooks/useFotoPaciente";
+import { useAntecedentes } from "@/features/historial/hooks/useAntecedentes";
 
 type PacienteMin = {
   idPaciente: number;
@@ -40,6 +41,7 @@ export default function HistorialPage() {
   // Hooks de negocio
   const { buscar, loading: buscando, error: errBuscar } = useBuscarPacientePorDpi();
   const { items, loading, error, filter, setFilter, fetchFor } = useHistorial();
+  const { data: antecedentes, loading: loadingAnt, error: errorAnt } = useAntecedentes(paciente?.idPaciente ?? null);
 
   useEffect(() => {
     let alive = true;
@@ -145,6 +147,9 @@ export default function HistorialPage() {
       fotoUrl={fotoUrl}
       fotoLoading={fotoLoading}
 
+      antecedentes={antecedentes}
+      antLoading={loadingAnt}
+      antError={errorAnt}
     />
   );
 }

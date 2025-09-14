@@ -2,6 +2,7 @@
 import styles from "../ui/historial.module.css";
 import type { HistorialItem } from "@/features/historial/model/types";
 import type { HistFilter } from "@/features/historial/model/types";
+import type { Antecedentes } from "@/features/historial/hooks/useAntecedentes";
 
 type PacienteMin = {
   idPaciente: number;
@@ -30,6 +31,10 @@ type Props = {
 
   filter: HistFilter;
   setFilter: (f: HistFilter) => void;
+
+  antecedentes: Antecedentes | null;
+  antLoading?: boolean;
+  antError?: string | null;
 
   fotoUrl?: string | null;
   fotoLoading?: boolean;
@@ -95,10 +100,11 @@ export default function HistorialLayout({
   items, loading, error,
   filter, setFilter,
   fotoUrl, fotoLoading,
+  antecedentes, antLoading, antError,
 }: Props) {
-
   return (
     <div className={styles.wrap}>
+      {/* Header */}
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Historial Médico</h1>
@@ -108,6 +114,7 @@ export default function HistorialLayout({
         </div>
       </div>
 
+      {/* Buscador */}
       <div className={styles.searchRow} role="search">
         <div className={styles.searchLine}>
           <div className={styles.searchWrap}>
@@ -142,6 +149,7 @@ export default function HistorialLayout({
               </div>
             )}
           </div>
+
           <button
             type="button"
             className={styles.primaryBtn}
@@ -153,22 +161,27 @@ export default function HistorialLayout({
         </div>
       </div>
 
+      {/* Paciente seleccionado (línea arriba) */}
       {paciente && (
         <div className={styles.selectedInfo}>
           {paciente.apellidos} {paciente.nombres} · {paciente.dpi ?? "—"}
         </div>
       )}
 
+      {/* GRID */}
       <div className={styles.contentGrid}>
-        <section className={styles.card}>
+        {/* ===== Paciente ===== */}
+        <section className={`${styles.card} ${styles.colLeft}`}>
           <h2 className={styles.cardTitle}>Paciente</h2>
+
           {!wasSearched ? (
             <p className={styles.muted}>Ingresa el DPI y presiona <b>Buscar</b>.</p>
           ) : !paciente ? (
             <p className={styles.muted}>No se encontró el paciente.</p>
           ) : (
             <>
-              <div className={styles.patientSkeleton}>
+              {/* Cabezal: sólo avatar (sin líneas de skeleton) */}
+              <div className={styles.patientHead}>
                 {fotoLoading ? (
                   <div className={styles.skAvatar} />
                 ) : fotoUrl ? (
@@ -182,11 +195,6 @@ export default function HistorialLayout({
                 ) : (
                   <div className={styles.skAvatar} />
                 )}
-
-                <div className={styles.skLines}>
-                  <div className={styles.skLine} />
-                  <div className={styles.skLineShort} />
-                </div>
               </div>
 
               <div className={styles.metaGrid}>
@@ -203,7 +211,58 @@ export default function HistorialLayout({
           )}
         </section>
 
-        <section className={styles.card}>
+        {/* ===== Antecedentes ===== */}
+        {paciente && (
+          <section className={`${styles.card} ${styles.colRight}`}>
+            <h2 className={styles.cardTitle}>Antecedentes médicos</h2>
+
+            {antLoading ? (
+              <div className={styles.muted}>Cargando antecedentes…</div>
+            ) : antError ? (
+              <div className={styles.errorBox}>{antError}</div>
+            ) : !antecedentes ? (
+              <div className={styles.muted}>Sin antecedentes registrados.</div>
+            ) : (
+              <div className={styles.metaGrid} style={{ gridTemplateColumns: "1fr" }}>
+                <div>
+                  <div className={styles.metaLabel}>Antecedentes</div>
+                  <div className={styles.metaValue}>{antecedentes.antecedentes || "—"}</div>
+                </div>
+                <div>
+                  <div className={styles.metaLabel}>Alergias</div>
+                  <div className={styles.metaValue}>{antecedentes.alergias || "—"}</div>
+                </div>
+                <div>
+                  <div className={styles.metaLabel}>Enfermedades crónicas</div>
+                  <div className={styles.metaValue}>
+                    {antecedentes.enfermedadesCronicas || (antecedentes as any).enfermedades_cronicas || "—"}
+                  </div>
+                  {/* <div>
+                    <div className={styles.metaLabel}>Descripción</div>
+                    <div className={styles.metaValue}>{antecedentes.descripcion || "—"}</div>
+                  </div> */}
+                </div>
+                <div style={{ display: "flex", gap: 12 }}>
+                  <div>
+                    <div className={styles.metaLabel}>Fecha registro</div>
+                    <div className={styles.metaValue}>
+                      {antecedentes.fechaRegistro ? fmtDate(antecedentes.fechaRegistro) : "—"}
+                    </div>
+                  </div>
+                  {/* <div>
+                    <div className={styles.metaLabel}>Última actualización</div>
+                    <div className={styles.metaValue}>
+                      {antecedentes.ultimaActualizacion ? fmtDate(antecedentes.ultimaActualizacion) : "—"}
+                    </div>
+                  </div> */}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ===== Timeline (abajo, ocupa toda la fila) ===== */}
+        <section className={`${styles.card} ${styles.spanAll}`}>
           <div className={styles.cardHeader}>
             <h2 className={styles.cardTitle}>Línea de tiempo</h2>
             <div className={styles.filters}>
@@ -277,10 +336,10 @@ export default function HistorialLayout({
 
                       {renderBody(it)}
 
-                      <div className={styles.tFooter}>
+                      {/* <div className={styles.tFooter}>
                         <button className={styles.linkBtn} disabled>Ver detalles</button>
                         <button className={styles.linkBtn} disabled>Adjuntar archivo</button>
-                      </div>
+                      </div> */}
                     </div>
                   </li>
                 );

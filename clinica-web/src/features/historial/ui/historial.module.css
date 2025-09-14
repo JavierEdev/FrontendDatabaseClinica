@@ -130,6 +130,41 @@
   border-radius: 12px;
   object-fit: cover;
   display: block;
-  background: #f8fafc;
-  border: 1px solid #eef0f5;
+}
+
+.contentGrid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 16px;
+}
+
+.colLeft  { grid-column: 1 / 2; }
+.colRight { grid-column: 2 / 3; }
+.spanAll  { grid-column: 1 / -1; }
+
+.avatarImg {
+  width: 140px;
+  height: 140px;
+  border-radius: 10px;
+  object-fit: cover;
+  display: block;
+}
+
+.patientHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.metaLabel {
+  font-size: 14px;
+  color: var(--fg); 
+  font-weight: 900;
+  text-transform: none;
+}
+
+.metaValue {
+  font-weight: 400;
+  color: var(--muted);
 }
