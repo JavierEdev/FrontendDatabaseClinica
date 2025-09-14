@@ -93,3 +93,24 @@ export type InfoMedicaInicialResponse = {
   idAntecedente: number;
   idPaciente: number;
 };
+
+// ---------- POST /api/Pacientes/{idPaciente}/consultas ----------
+export interface CrearConsultaPayload {
+  idPaciente: number;
+  idMedico: number;
+  fecha: string;            // ISO (ej. new Date().toISOString())
+  motivoConsulta: string;
+  diagnostico: string;
+  observaciones?: string;
+  idCita: number;
+}
+export interface CrearConsultaResponse {
+  idConsulta: number;
+  idPaciente: number;
+  idMedico: number;
+  idCita: number;
+  fecha: string;
+  motivoConsulta: string;
+  diagnostico: string;
+  observaciones?: string;
+}

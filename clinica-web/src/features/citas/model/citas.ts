@@ -3,7 +3,8 @@ export type CitaEstado =
   | "CONFIRMADA"
   | "CANCELADA"
   | "REPROGRAMADA"
-  | "PENDIENTE";
+  | "PENDIENTE"
+  | "PAGADA";
 
 /** RAW del backend para listados (shape genérico) */
 export type APICitaGeneral = {

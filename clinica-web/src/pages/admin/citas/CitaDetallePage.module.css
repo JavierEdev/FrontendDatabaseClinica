@@ -25,6 +25,10 @@
 .st_REPROGRAMADA { background: #eff6ff; color: #1d4ed8; }
 .st_CANCELADA { background: #fef2f2; color: #b91c1c; }
 .st_PENDIENTE  { background: #fff7ed; color: #9a3412; }
+.st_PAGADA {
+  background: #0ea5e9;   /* celeste */
+  color: #fff;
+}
 
 @media (max-width: 640px) {
   .row { grid-template-columns: 1fr; }

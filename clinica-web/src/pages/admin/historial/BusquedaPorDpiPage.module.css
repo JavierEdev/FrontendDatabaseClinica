@@ -122,6 +122,10 @@
 .st_CANCELADA { background: #fee2e2; color: var(--danger); }
 .st_REPROGRAMADA { background: #ffedd5; color: #9a3412; }
 .st_PENDIENTE { background: #e0e7ff; color: #4338ca; }
+.st_PAGADA {
+  background: #0ea5e9;   /* celeste */
+  color: #fff;
+}
 
 /* Empty */
 .empty {

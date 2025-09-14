@@ -29,6 +29,10 @@
 .st_REPROGRAMADA { background: #eff6ff; color: #1d4ed8; }
 .st_CANCELADA { background: #fef2f2; color: #b91c1c; }
 .st_PENDIENTE { background: #fff7ed; color: #9a3412; }
+.st_PAGADA {
+  background: #0ea5e9;
+  color: #fff;
+}
 
 .actions { display: flex; gap: 6px; }
 .actions button { padding: 6px 10px; border-radius: 8px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; }

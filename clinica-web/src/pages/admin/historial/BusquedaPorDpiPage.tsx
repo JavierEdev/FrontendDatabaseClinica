@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./BusquedaPorDpiPage.module.css";
 
-import { fetchPacienteByDpi } from "@/features/pacientes/api/pacientes"; // ← el GET /api/Pacientes/dpi/:dpi
+import { fetchPacienteByDpi } from "@/features/pacientes/api/pacientes";
 import type { PacienteDetalleResponse } from "@/features/pacientes/model/pacientes";
 
 import { fetchCitasPorPaciente } from "@/features/citas/api/citas";

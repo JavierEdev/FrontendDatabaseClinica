@@ -36,6 +36,7 @@ function normalizarEstado(s?: string): CitaEstado {
   if (v === "confirmada") return "CONFIRMADA";
   if (v === "cancelada") return "CANCELADA";
   if (v === "reprogramada") return "REPROGRAMADA";
+  if (v === "pagada") return "PAGADA"; 
   return "PENDIENTE";
 }
 

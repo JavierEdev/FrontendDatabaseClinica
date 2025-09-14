@@ -5,7 +5,9 @@ import type {
   ListaPacientesResponse,
   PacienteDetalleResponse,
   NuevoContactoEmergencia,
-  ContactoEmergenciaCreado
+  ContactoEmergenciaCreado,
+  CrearConsultaPayload,
+  CrearConsultaResponse
 } from "../model/pacientes";
 
 export async function crearPaciente(
@@ -115,4 +117,18 @@ export async function fetchPacienteByDpi(
       ? r.contactosEmergencia
       : [],
   } as PacienteDetalleResponse;
+}
+
+export async function crearConsultaPaciente(
+  idPaciente: number,
+  payload: Omit<CrearConsultaPayload, "idPaciente">,
+  signal?: AbortSignal
+): Promise<CrearConsultaResponse> {
+  const url = `/api/Pacientes/${idPaciente}/consultas`;
+  return api<CrearConsultaResponse>(url, {
+    method: "POST",
+    auth: true,
+    signal,
+    body: JSON.stringify({ ...payload, idPaciente }),
+  });
 }

@@ -9,7 +9,6 @@ import RegistroPage from "@/pages/RegistroPage";
 import { AdminRoute } from "@/features/auth/guards/AdminRoute";
 import AdminLayout from "@/pages/admin/AdminLayout";
 import AdminHomePage from "@/pages/admin/AdminHomePage";
-import CitasPage from "@/pages/admin/citas/CitasPage";
 import PacientesListPage from "@/pages/admin/pacientes/List";
 import NuevaCitaAdminPage from "@/pages/admin/pacientes/NuevaCitaAdminPage";
 import AgregarPacientePage from "@/pages/admin/pacientes/AgregarPacientePage";
@@ -23,6 +22,7 @@ import AgregarMedicoPage from "@/pages/admin/medicos/AgregarMedicoPage";
 import BusquedaPorDpiPage from "@/pages/admin/historial/BusquedaPorDpiPage";
 import RecetaListPage from "@/pages/admin/recetas/ListRecetas";
 import RecetaCrearPage from "@/pages/admin/recetas/CrearRecetas";
+import NuevaConsultaPage from "@/pages/admin/historial/NuevaConsultaPage";
 
 // Protegidas generales
 import { ProtectedRoute } from "@/features/auth/guards/ProtectedRoute";
@@ -95,6 +95,7 @@ export function AppRoutes() {
         <Route path="historial/nuevo" element={<BusquedaPorDpiPage />} />
         <Route path="recetas" element={<RecetaListPage/>} />
         <Route path="recetas/crear" element={<RecetaCrearPage/>} />
+        <Route path="pacientes/:idPaciente/consultas/nueva" element={<NuevaConsultaPage />} />
         {/* agrega más rutas hijas aquí */}
       </Route>
 
