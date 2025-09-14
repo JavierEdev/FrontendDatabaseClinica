@@ -32,8 +32,8 @@ const GROUPS: Group[] = [
     label: "Médicos",
     icon: "🩺",
     items: [
-      { label: "Lista de médicos", to: "/admin/medicos" },
-      { label: "Disponibilidad", disabled: true },
+      { label: "Lista de médicos", to: "/admin/medicos/" },
+      { label: "Agregar Medicos", to: "/admin/medicos/nuevo" },
     ],
   },
   {
@@ -42,14 +42,6 @@ const GROUPS: Group[] = [
     items: [
       { label: "Crear usuarios", to: "/admin/usuarios/crear"},
       { label: "Ver usuarios", to: "/admin/usuarios" },
-    ],
-  },
-  {
-    label: "Settings",
-    icon: "⚙️",
-    items: [
-      { label: "Usuarios y Roles", disabled: true },
-      { label: "Catálogos", disabled: true },
     ],
   },
 ];

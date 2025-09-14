@@ -1,8 +1,12 @@
-import type { Medico } from "@/features/medicos/models/Medico";
+import type {
+  Medico,
+  MedicoDetalleResponse,
+  MedicoCreateRequest,
+} from "@/features/medicos/models/Medico";
+
 import type { ApiListResponse } from "@/features/medicos/models/Api";
 import type { DisponibilidadDia } from "@/features/medicos/models/Disponibilidad";
 import { api } from "@/features/auth/api/api";
-import type { MedicoDetalleResponse } from "@/features/medicos/models/Medico";
 
 const API_BASE = (import.meta.env.VITE_CITAS_BASE ?? "").replace(/\/$/, "");
 
@@ -74,4 +78,38 @@ export async function fetchMedicoById(
     if (import.meta.env.DEV) console.warn("[medicos] fetchMedicoById error:", error);
     return null;
   }
+}
+
+export async function crearMedico(
+  payload: MedicoCreateRequest,
+  opts?: { signal?: AbortSignal }
+): Promise<boolean> {
+  const url = `${API_BASE}/api/medicos`;
+
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    ...authHeaders(),
+  };
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+    credentials: "include",
+    signal: opts?.signal,
+  });
+
+  if (!res.ok) {
+    let msg = `HTTP ${res.status}`;
+    try {
+      const j = await res.json();
+      if (j?.message) msg = j.message;
+    } catch {}
+    throw new Error(msg);
+  }
+
+  // Espera: { success: true, message: "...", data: "..." }
+  const json: any = await res.json();
+  return Boolean(json?.success);
 }
