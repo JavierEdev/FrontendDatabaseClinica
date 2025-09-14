@@ -99,3 +99,20 @@ export async function crearContactoEmergencia(
     }
   );
 }
+
+export async function fetchPacienteByDpi(
+  dpi: string,
+  signal?: AbortSignal
+): Promise<PacienteDetalleResponse> {
+  const url = `/api/Pacientes/dpi/${encodeURIComponent(dpi)}`;
+
+  const raw = await api<any>(url, { method: "GET", auth: true, signal });
+  const r = raw?.data ?? raw;
+
+  return {
+    ...r,
+    contactosEmergencia: Array.isArray(r?.contactosEmergencia)
+      ? r.contactosEmergencia
+      : [],
+  } as PacienteDetalleResponse;
+}

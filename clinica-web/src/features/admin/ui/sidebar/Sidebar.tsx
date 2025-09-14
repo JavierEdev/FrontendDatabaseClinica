@@ -25,7 +25,8 @@ const GROUPS: Group[] = [
     label: "Historial",
     icon: "🗂️",
     items: [
-      { label: "Historial Médico", to: "/admin/Historial" },
+      { label: "Historial Médico", to: "/admin/historial" },
+      { label: "Agregar Consulta Médica", to: "/admin/historial/nuevo" },
     ],
   },
   {
