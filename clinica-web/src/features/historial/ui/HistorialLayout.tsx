@@ -1,6 +1,7 @@
+// features/historial/ui/HistorialLayout.tsx
 import styles from "../ui/historial.module.css";
 import type { HistorialItem } from "@/features/historial/model/types";
-import type { HistFilter } from "@/features/historial/hooks/useHistorial";
+import type { HistFilter } from "@/features/historial/model/types";
 
 type PacienteMin = {
   idPaciente: number;
@@ -10,19 +11,16 @@ type PacienteMin = {
 };
 
 type Props = {
-  /* buscador */
   dpiInput: string;
   onDpiInput: (v: string) => void;
   onBuscar: () => void;
 
-  /* sugerencias */
   matches: PacienteMin[];
   sugOpen: boolean;
   setSugOpen: (v: boolean) => void;
   onPick: (p: PacienteMin) => void;
   sugLoading?: boolean;
 
-  /* info seleccionada / timeline */
   paciente: PacienteMin | null;
   wasSearched: boolean;
 
@@ -32,14 +30,62 @@ type Props = {
 
   filter: HistFilter;
   setFilter: (f: HistFilter) => void;
+
+  fotoUrl?: string | null;
+  fotoLoading?: boolean;
 };
 
 function fmtDate(s: string) {
   const d = new Date(s);
   return d.toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
 }
-function bodyText(it: HistorialItem) {
-  return it.titulo ?? it.detalle ?? "—";
+
+function idConsultaDe(it: HistorialItem) {
+  return it.meta?.idConsulta ?? it.meta?.id_consulta ?? it.meta?.idCita ?? null;
+}
+
+function renderBody(it: HistorialItem) {
+  const idC = idConsultaDe(it);
+  const fecha = fmtDate(it.fecha);
+
+  if (it.tipo === "CONSULTA") {
+    const m = it.meta ?? {};
+    const motivo = m.motivo_consulta ?? m.motivo ?? it.titulo ?? "—";
+    const dx = m.diagnostico ?? it.detalle ?? "—";
+    const obs = m.observaciones ?? m.notas ?? null;
+
+    return (
+      <div className={styles.tBody}>
+        <div><strong>Id Consulta:</strong> <span className={styles.sugDpi}>{idC ?? "—"}</span></div>
+        <div><strong>Fecha:</strong> {fecha}</div>
+        <div><strong>Motivo:</strong> {motivo}</div>
+        <div><strong>Diagnóstico:</strong> {dx}</div>
+        {obs ? <div><strong>Observaciones:</strong> {obs}</div> : null}
+      </div>
+    );
+  }
+
+  if (it.tipo === "RECETA") {
+    const r = it.meta ?? {};
+    const line = [r.medicamento, r.dosis, r.frecuencia, r.duracion].filter(Boolean).join(" · ") || it.titulo || "—";
+    return (
+      <div className={styles.tBody}>
+        <div><strong>Id Consulta:</strong> <span className={styles.sugDpi}>{idC ?? "—"}</span></div>
+        <div><strong>Fecha:</strong> {fecha}</div>
+        <div><strong>Medicamento, dosis, frecuencia, duración:</strong> {line}</div>
+      </div>
+    );
+  }
+
+  const p = it.meta ?? {};
+  return (
+    <div className={styles.tBody}>
+      <div><strong>Id Consulta:</strong> <span className={styles.sugDpi}>{idC ?? "—"}</span></div>
+      <div><strong>Fecha:</strong> {fecha}</div>
+      <div><strong>Procedimiento:</strong> {p.procedimiento ?? it.titulo ?? "—"}</div>
+      <div><strong>Descripción:</strong> {p.descripcion ?? it.detalle ?? "—"}</div>
+    </div>
+  );
 }
 
 export default function HistorialLayout({
@@ -48,10 +94,11 @@ export default function HistorialLayout({
   paciente, wasSearched,
   items, loading, error,
   filter, setFilter,
+  fotoUrl, fotoLoading,
 }: Props) {
+
   return (
     <div className={styles.wrap}>
-      {/* Header */}
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Historial Médico</h1>
@@ -61,7 +108,6 @@ export default function HistorialLayout({
         </div>
       </div>
 
-      {/* Buscador + sugerencias */}
       <div className={styles.searchRow} role="search">
         <div className={styles.searchLine}>
           <div className={styles.searchWrap}>
@@ -76,25 +122,18 @@ export default function HistorialLayout({
               aria-label="DPI del paciente"
               aria-expanded={sugOpen ? "true" : "false"}
             />
-
-            {/* Dropdown (evitamos que el mousedown cierre el input antes del click) */}
             {sugOpen && dpiInput && (
               <div className={styles.suggestions} onMouseDown={(e) => e.preventDefault()}>
                 {sugLoading ? (
-                  <div className={styles.suggestionItem}>
-                    <span className={styles.sugName}>Cargando…</span>
-                  </div>
+                  <div className={styles.suggestionItem}><span className={styles.sugName}>Cargando…</span></div>
                 ) : matches.length === 0 ? (
-                  <div className={styles.suggestionItem}>
-                    <span className={styles.sugName}>Sin coincidencias.</span>
-                  </div>
+                  <div className={styles.suggestionItem}><span className={styles.sugName}>Sin coincidencias.</span></div>
                 ) : matches.map((p) => (
                   <button
                     key={p.idPaciente}
                     type="button"
                     className={styles.suggestionItem}
                     onClick={() => { onPick(p); setSugOpen(false); }}
-                    title="Seleccionar paciente"
                   >
                     <span className={styles.sugName}>{p.apellidos} {p.nombres}</span>
                     <span className={styles.sugDpi}>{p.dpi ?? "—"}</span>
@@ -103,7 +142,6 @@ export default function HistorialLayout({
               </div>
             )}
           </div>
-
           <button
             type="button"
             className={styles.primaryBtn}
@@ -115,16 +153,13 @@ export default function HistorialLayout({
         </div>
       </div>
 
-      {/* Renglón con el paciente */}
       {paciente && (
         <div className={styles.selectedInfo}>
           {paciente.apellidos} {paciente.nombres} · {paciente.dpi ?? "—"}
         </div>
       )}
 
-      {/* Contenido */}
       <div className={styles.contentGrid}>
-        {/* Panel paciente */}
         <section className={styles.card}>
           <h2 className={styles.cardTitle}>Paciente</h2>
           {!wasSearched ? (
@@ -134,7 +169,20 @@ export default function HistorialLayout({
           ) : (
             <>
               <div className={styles.patientSkeleton}>
-                <div className={styles.skAvatar} />
+                {fotoLoading ? (
+                  <div className={styles.skAvatar} />
+                ) : fotoUrl ? (
+                  <img
+                    src={fotoUrl}
+                    alt="Foto del paciente"
+                    className={styles.avatarImg}
+                    referrerPolicy="no-referrer"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className={styles.skAvatar} />
+                )}
+
                 <div className={styles.skLines}>
                   <div className={styles.skLine} />
                   <div className={styles.skLineShort} />
@@ -144,9 +192,7 @@ export default function HistorialLayout({
               <div className={styles.metaGrid}>
                 <div>
                   <div className={styles.metaLabel}>Nombre</div>
-                  <div className={styles.metaValue}>
-                    {paciente.apellidos} {paciente.nombres}
-                  </div>
+                  <div className={styles.metaValue}>{paciente.apellidos} {paciente.nombres}</div>
                 </div>
                 <div>
                   <div className={styles.metaLabel}>DPI</div>
@@ -162,12 +208,11 @@ export default function HistorialLayout({
           )}
         </section>
 
-        {/* Timeline */}
         <section className={styles.card}>
           <div className={styles.cardHeader}>
             <h2 className={styles.cardTitle}>Línea de tiempo</h2>
             <div className={styles.filters}>
-              {(["todos","CONSULTA","ANTECEDENTE","RECETA","IMAGEN"] as HistFilter[]).map((f) => (
+              {(["todos","CONSULTA","RECETA","PROCEDIMIENTO"] as HistFilter[]).map((f) => (
                 <button
                   key={f}
                   type="button"
@@ -177,8 +222,7 @@ export default function HistorialLayout({
                 >
                   {f === "todos" ? "Todos" :
                    f === "CONSULTA" ? "Consultas" :
-                   f === "ANTECEDENTE" ? "Antecedentes" :
-                   f === "RECETA" ? "Recetas" : "Imágenes"}
+                   f === "RECETA" ? "Recetas" : "Procedimientos"}
                 </button>
               ))}
             </div>
@@ -194,8 +238,8 @@ export default function HistorialLayout({
             <div className={styles.errorBox}>{error}</div>
           ) : loading ? (
             <ul className={styles.timeline} role="list">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <li key={i} className={styles.tItem}>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <li key={`sk-${i}`} className={styles.tItem}>
                   <div className={styles.tBullet} />
                   <div className={styles.tCard}>
                     <div className={styles.tHeader}>
@@ -212,22 +256,40 @@ export default function HistorialLayout({
             </ul>
           ) : (
             <ul className={styles.timeline} role="list">
-              {items.map((it) => (
-                <li key={it.id} className={styles.tItem}>
-                  <div className={styles.tBullet} />
-                  <div className={styles.tCard}>
-                    <div className={styles.tHeader}>
-                      <div>{fmtDate(it.fecha)}</div>
-                      <div className={styles.badgeMuted}>{it.tipo}</div>
+              {items.map((it) => {
+                const rid =
+                  it.meta?.id_receta ??
+                  it.meta?.idReceta ??
+                  it.meta?.id_procedimiento ??
+                  it.meta?.idProcedimiento ??
+                  it.meta?.idConsulta ??
+                  it.id;
+
+                const idC = idConsultaDe(it);
+
+                return (
+                  <li key={`${it.tipo}-${rid}`} className={styles.tItem}>
+                    <div className={styles.tBullet} />
+                    <div className={styles.tCard}>
+                      <div className={styles.tHeader}>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          {idC != null && (
+                            <div className={styles.badgeMuted}>ID C: {idC}</div>
+                          )}
+                          <div className={styles.badgeMuted}>{it.tipo}</div>
+                        </div>
+                      </div>
+
+                      {renderBody(it)}
+
+                      <div className={styles.tFooter}>
+                        <button className={styles.linkBtn} disabled>Ver detalles</button>
+                        <button className={styles.linkBtn} disabled>Adjuntar archivo</button>
+                      </div>
                     </div>
-                    <div className={styles.tBody}>{bodyText(it)}</div>
-                    <div className={styles.tFooter}>
-                      <button className={styles.linkBtn} disabled>Ver detalles</button>
-                      <button className={styles.linkBtn} disabled>Adjuntar archivo</button>
-                    </div>
-                  </div>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>

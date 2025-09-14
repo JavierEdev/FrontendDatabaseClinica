@@ -1,10 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchHistorialPaciente } from "../api/historial";
-import type { HistorialItem, HistorialTipo } from "../model/types";
+import type { HistorialItem, HistFilter } from "../model/types";
 
-export type HistFilter = "todos" | HistorialTipo;
+type UseHistorialResult = {
+  items: HistorialItem[];
+  loading: boolean;
+  error: string | null;
+  filter: HistFilter;
+  setFilter: (f: HistFilter) => void;
+  fetchFor: (id: number | null) => void;
+};
 
-export function useHistorial() {
+export function useHistorial(): UseHistorialResult {
   const [items, setItems] = useState<HistorialItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -12,11 +19,10 @@ export function useHistorial() {
   const [filter, setFilter] = useState<HistFilter>("todos");
   const [patientId, setPatientId] = useState<number | null>(null);
 
-  // clave para ignorar respuestas que llegan tarde
   const lastReqKey = useRef<string>("");
 
   const fetchFor = useCallback((id: number | null) => {
-    setPatientId(id);            // ← sólo fijamos a quién cargar
+    setPatientId(id);
   }, []);
 
   useEffect(() => {
@@ -30,17 +36,24 @@ export function useHistorial() {
 
     fetchHistorialPaciente(patientId, filter)
       .then((res) => {
-        // si llegó otra petición más nueva mientras tanto, ignoramos esta
         if (lastReqKey.current !== key) return;
 
-        // REEMPLAZA el estado (no concatenes) y de paso deduplica
         const seen = new Set<string>();
         const clean = res.filter((it) => {
-          const k = `${it.tipo}|${it.fecha}|${it.titulo ?? ""}|${it.detalle ?? ""}`;
+          const idc = it.meta?.idConsulta ?? it.id;
+          const idr = it.meta?.id_receta ?? it.meta?.idReceta ?? null;
+          const idp = it.meta?.id_procedimiento ?? it.meta?.idProcedimiento ?? null;
+
+          const k =
+            it.tipo === "CONSULTA" ? `C|${idc}` :
+            it.tipo === "RECETA"   ? `R|${idr ?? `${idc}|${it.titulo}`}` :
+                                     `P|${idp ?? `${idc}|${it.titulo}`}`;
+
           if (seen.has(k)) return false;
           seen.add(k);
           return true;
         });
+
         setItems(clean);
       })
       .catch((e) => setError(e?.message ?? "Error al cargar historial"))

@@ -18,19 +18,30 @@ export function useBuscarPacientePorDpi() {
       const clean = (dpi ?? "").replace(/\D+/g, "");
       if (!clean) return null;
 
-      // Traemos un “lote” y buscamos por DPI exacto, si no, por prefijo.
-      const res = await listarPacientes(1, 500);
-      const items = res?.items ?? [];
+      let page = 1;
+      const pageSize = 50;
+      let total = Infinity;
 
-      const exact =
-        items.find(p => (p.dpi ?? "").replace(/\D+/g, "") === clean) || null;
+      let found: PacienteMin | null = null;
 
-      if (exact) return exact;
+      while ((page - 1) * pageSize < total) {
+        const res = await listarPacientes(page, pageSize);
+        total = res?.total ?? res?.items?.length ?? 0;
 
-      const prefix =
-        items.find(p => (p.dpi ?? "").replace(/\D+/g, "").startsWith(clean)) || null;
+        const items = res?.items ?? [];
+        const norm = (s?: string) => (s ?? "").replace(/\D+/g, "");
 
-      return prefix;
+        found =
+          items.find(p => norm(p.dpi) === clean) ??
+          items.find(p => norm(p.dpi).startsWith(clean)) ??
+          null;
+
+        if (found) break;
+        page += 1;
+
+        if (page > 1000) break;
+      }
+      return found;
     } catch (e) {
       setError((e as Error).message);
       throw e;

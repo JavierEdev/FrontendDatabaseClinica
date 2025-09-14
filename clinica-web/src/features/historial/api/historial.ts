@@ -1,14 +1,13 @@
-// src/features/historial/api/historial.ts
 import type { HistorialItem, HistorialTipo } from "../model/types";
 
-/* ------------------------ bases desde .env ------------------------ */
-const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/+$/, "") ?? "";
-const CITAS_BASE = (import.meta.env.VITE_CITAS_BASE as string | undefined)?.replace(/\/+$/, "") ?? "";
+const API_BASE   = import.meta.env.PROD ? ((import.meta.env.VITE_API_BASE_URL  as string | undefined)?.replace(/\/+$/, "") ?? "") : "";
+const CITAS_BASE = import.meta.env.PROD ? ((import.meta.env.VITE_CITAS_BASE    as string | undefined)?.replace(/\/+$/, "") ?? "") : "";
 
 /* ------------------------ helpers ------------------------ */
 function authHeaders(): HeadersInit {
   const token =
     localStorage.getItem("access_token") ||
+    localStorage.getItem("accessToken") ||
     localStorage.getItem("token") ||
     "";
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -22,195 +21,148 @@ function toISO(v: any): string {
 function joinUrl(base: string, path: string): string {
   const b = (base || "").replace(/\/+$/, "");
   const p = `/${(path || "").replace(/^\/+/, "")}`;
-  if (!base) {
-    // Si falta la base, quedará relativo (útil para dev), pero avisamos.
-    console.warn(`[historial.ts] Base URL vacía para ${path}. Verifica tus variables .env`);
-  }
   return `${b}${p}`;
 }
 
 async function getJSON(url: string): Promise<any> {
-  const res = await fetch(url, {
-    headers: { Accept: "application/json", ...authHeaders() },
-  });
+  const res = await fetch(url, { headers: { Accept: "application/json", ...authHeaders() }});
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
   return Array.isArray(data) ? data : data?.items ?? data?.data ?? data;
 }
 
-// Wrappers por servicio (evita repetir concatenaciones)
-const getApiJSON   = (path: string) => getJSON(joinUrl(API_BASE, path));   // 5151 Pacientes-service
-const getCitasJSON = (path: string) => getJSON(joinUrl(CITAS_BASE, path)); // 5092 Gestión Clínica
+const getApiJSON   = (path: string) => getJSON(joinUrl(API_BASE,   path));
+const getCitasJSON = (path: string) => getJSON(joinUrl(CITAS_BASE, path));
 
-function fmtItemBase(r: any, tipo: HistorialTipo): HistorialItem {
-  const fecha =
-    r.fecha ??
-    r.fechaConsulta ??
-    r.fechaCita ??
-    r.fechaReceta ??
-    r.fechaDocumento ??
-    r.createdAt ??
-    r.date ??
-    r.fechaAt ??
-    Date.now();
 
+function asConsulta(r: any): HistorialItem {
   return {
-    id: Number(
-      r.id ??
-      r.idConsulta ??
-      r.idCita ??
-      r.idReceta ??
-      r.idDocumento ??
-      r.historialId ??
-      Math.floor(Math.random() * 1e9)
-    ),
-    fecha: toISO(fecha),
-    tipo,
-    titulo:
-      r.titulo ??
-      r.motivo ??
-      r.descripcion ??
-      r.detalle ??
-      r.nombre ??
-      r.estado ??
-      "",
-    detalle: r.detalle ?? r.notas ?? r.indicaciones ?? "",
-    meta: r, // útil luego para “ver detalles”
+    id: Number(r.id_consulta ?? r.idConsulta ?? r.id ?? Math.random() * 1e9),
+    fecha: toISO(r.fecha),
+    tipo: "CONSULTA",
+    titulo: r.motivo_consulta || r.diagnostico || "Consulta",
+    detalle: r.observaciones || "",
+    meta: { ...r, idConsulta: r.id_consulta ?? r.idConsulta ?? r.id },
   };
 }
 
-/* ------------------- lecturas por servicio ------------------- */
+function asReceta(r: any, fallbackFecha?: string): HistorialItem {
+  const resumen = [r.medicamento, r.dosis, r.frecuencia, r.duracion].filter(Boolean).join(" · ");
+  return {
+    id: Number(r.id_receta ?? r.idReceta ?? r.id ?? Math.random() * 1e9),
+    fecha: toISO(r.fecha ?? r.createdAt ?? fallbackFecha ?? Date.now()),
+    tipo: "RECETA",
+    titulo: resumen || "Receta",
+    detalle: "",
+    meta: r,
+  };
+}
 
-// 1) Pacientes-service (5151)
-async function fetchConsultasPacientesService(idPaciente: number): Promise<HistorialItem[]> {
+function asProcedimiento(r: any, fallbackFecha?: string): HistorialItem {
+  return {
+    id: Number(r.id_procedimiento ?? r.idProcedimiento ?? r.id ?? Math.random() * 1e9),
+    fecha: toISO(r.fecha ?? r.createdAt ?? fallbackFecha ?? Date.now()),
+    tipo: "PROCEDIMIENTO",
+    titulo: r.procedimiento || "Procedimiento",
+    detalle: r.descripcion || "",
+    meta: r,
+  };
+}
+
+/* ------------------- llamadas a la API ------------------- */
+async function fetchConsultas(idPaciente: number): Promise<HistorialItem[]> {
   const rows = await getApiJSON(`/api/Pacientes/${idPaciente}/consultas`);
-  return rows.map((r: any) => {
-    // forzamos “idConsulta” en meta para facilitar el match con recetas
-    const it = fmtItemBase(r, "CONSULTA");
-    it.meta = { ...it.meta, idConsulta: r.idConsulta ?? r.id ?? r.id_consulta };
-    return it;
-  });
+  return rows.map(asConsulta);
 }
 
-// 2) Gestión Clínica (5092) – citas del paciente
-async function fetchConsultasGestionClinica(idPaciente: number): Promise<HistorialItem[]> {
-  const rows = await getCitasJSON(`/api/citas/paciente/${idPaciente}`);
-  return rows
-    // .filter((r: any) => (r.estado ?? "").toLowerCase() !== "cancelada")
-    .map((r: any) => {
-      const it = fmtItemBase(
-        {
-          ...r,
-          fecha: r.fecha ?? r.fechaCita ?? r.fecha_programada ?? r.createdAt,
-          titulo: r.motivo ?? r.procedimiento ?? r.estado ?? "Consulta",
-        },
-        "CONSULTA"
-      );
-      const idConsulta = r.idConsulta ?? r.id ?? r.idCita ?? r.id_cita;
-      it.meta = { ...it.meta, idConsulta };
-      return it;
-    });
+async function fetchRecetasPorConsulta(idConsulta: number): Promise<any[]> {
+  const resp = await getCitasJSON(`/api/recetas/consulta/${idConsulta}`);
+  if (Array.isArray(resp)) return resp;
+  if (Array.isArray(resp?.data)) return resp.data;
+  return [];
 }
 
-/** Recetas por cada consulta en Gestión Clínica (5092) */
-async function fetchRecetasDeConsultas(consultas: HistorialItem[]): Promise<HistorialItem[]> {
-  const out: HistorialItem[] = [];
-  await Promise.all(
-    consultas.map(async (c) => {
-      const idConsulta = c.meta?.idConsulta ?? c.meta?.id ?? c.id;
-      if (!idConsulta) return;
-      try {
-        const recetas = await getCitasJSON(`/api/recetas/consulta/${idConsulta}`);
-        recetas.forEach((r: any) => out.push(fmtItemBase(r, "RECETA")));
-      } catch {
-        /* sin recetas para esa consulta */
-      }
-    })
-  );
-  return out;
-}
-
-/** Documentos (los mostramos como “IMAGEN”) – Pacientes-service (5151) */
-async function fetchDocumentos(idPaciente: number): Promise<HistorialItem[]> {
-  const rows = await getApiJSON(`/api/Pacientes/${idPaciente}/documentos`);
-  return rows.map((r: any) => {
-    const it = fmtItemBase(r, "IMAGEN");
-    if (!it.titulo) it.titulo = r.nombreArchivo ?? r.tipoDocumento ?? "Documento";
-    return it;
-  });
-}
-
-/** Antecedentes médicos – Pacientes-service (5151) */
-async function fetchAntecedentes(idPaciente: number): Promise<HistorialItem[]> {
-  let rows: any[] = [];
-  try {
-    const r1 = await getApiJSON(`/api/Pacientes/${idPaciente}/antecedentes-medicos`);
-    rows = Array.isArray(r1) ? r1 : r1 ? [r1] : [];
-  } catch {
-    try {
-      const r2 = await getApiJSON(`/api/Pacientes/antecedentes-medicos?idPaciente=${idPaciente}`);
-      rows = Array.isArray(r2) ? r2 : r2 ? [r2] : [];
-    } catch {
-      rows = [];
-    }
-  }
-  return rows.map((r: any) => {
-    const it = fmtItemBase(r, "ANTECEDENTE");
-    if (!it.titulo) it.titulo = r.enfermedad ?? r.alergia ?? "Antecedente";
-    return it;
-  });
+async function fetchProcedimientosPorConsulta(idPaciente: number, idConsulta: number): Promise<any[]> {
+  const resp = await getApiJSON(`/api/Pacientes/${idPaciente}/consultas/${idConsulta}/procedimientos?page=1&pageSize=50`);
+  if (Array.isArray(resp)) return resp;
+  if (Array.isArray(resp?.items)) return resp.items;
+  return [];
 }
 
 /* ----------------- orquestador principal ----------------- */
-/**
- * Carga el historial del paciente aplicando filtro:
- *   - filter: "todos" | "CONSULTA" | "ANTECEDENTE" | "RECETA" | "IMAGEN"
- */
 export async function fetchHistorialPaciente(
   idPaciente: number,
   filter: "todos" | HistorialTipo
 ): Promise<HistorialItem[]> {
-  const tasks: Promise<HistorialItem[]>[] = [];
 
-  // Siempre que necesitemos CONSULTAS o RECETAS, unimos ambas fuentes
-  if (filter === "CONSULTA" || filter === "todos" || filter === "RECETA") {
-    const [fromPacientes, fromGestion] = await Promise.allSettled([
-      fetchConsultasPacientesService(idPaciente), // 5151
-      fetchConsultasGestionClinica(idPaciente),   // 5092
-    ]);
+  const consultasRaw = await fetchConsultas(idPaciente);
 
-    const consultas: HistorialItem[] = [];
-    const seen = new Set<string>();
+  const seenCons = new Set<number | string>();
+  const consultas = consultasRaw.filter(c => {
+    const idc = c.meta?.idConsulta ?? c.id;
+    const key = String(idc);
+    if (seenCons.has(key)) return false;
+    seenCons.add(key);
+    return true;
+  });
 
-    const pushUnique = (arr: HistorialItem[]) => {
-      arr.forEach((it) => {
-        const key = `CONS-${it.meta?.idConsulta ?? it.id}`;
-        if (!seen.has(key)) { seen.add(key); consultas.push(it); }
+  if (filter === "CONSULTA") {
+    return consultas.sort((a, b) => (a.fecha > b.fecha ? -1 : 1));
+  }
+
+  const buildRecetas = async () => {
+    const out: HistorialItem[] = [];
+    for (const c of consultas) {
+      const idc = c.meta?.idConsulta ?? c.id;
+      const rs = await fetchRecetasPorConsulta(idc);
+      rs.forEach(r => {
+        const it = asReceta(r, c.fecha);
+        it.meta = { ...it.meta, idConsulta: idc };
+        out.push(it);
       });
-    };
-
-    if (fromPacientes.status === "fulfilled") pushUnique(fromPacientes.value);
-    if (fromGestion.status === "fulfilled") pushUnique(fromGestion.value);
-
-    if (filter === "CONSULTA") {
-      return consultas.sort((a, b) => (a.fecha > b.fecha ? -1 : 1));
     }
-    if (filter === "RECETA") {
-      const recetas = await fetchRecetasDeConsultas(consultas);
-      return recetas.sort((a, b) => (a.fecha > b.fecha ? -1 : 1));
+    const seen = new Set<number | string>();
+    return out.filter(x => {
+      const idr = x.meta?.id_receta ?? x.meta?.idReceta ?? x.id;
+      const key = String(idr);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+
+  const buildProcs = async () => {
+    const out: HistorialItem[] = [];
+    for (const c of consultas) {
+      const idc = c.meta?.idConsulta ?? c.id;
+      const ps = await fetchProcedimientosPorConsulta(idPaciente, idc);
+      ps.forEach(p => {
+        const it = asProcedimiento(p, c.fecha);
+        it.meta = { ...it.meta, idConsulta: idc };
+        out.push(it);
+      });
     }
-    // “todos”: añadimos consultas y programamos recetas
-    tasks.push(Promise.resolve(consultas));
-    tasks.push(fetchRecetasDeConsultas(consultas));
+
+    const seen = new Set<number | string>();
+    return out.filter(x => {
+      const idp = x.meta?.id_procedimiento ?? x.meta?.idProcedimiento ?? x.id;
+      const key = String(idp);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+
+  if (filter === "RECETA") {
+    const recetas = await buildRecetas();
+    return recetas.sort((a, b) => (a.fecha > b.fecha ? -1 : 1));
   }
 
-  if (filter === "IMAGEN" || filter === "todos") {
-    tasks.push(fetchDocumentos(idPaciente)); // 5151
-  }
-  if (filter === "ANTECEDENTE" || filter === "todos") {
-    tasks.push(fetchAntecedentes(idPaciente)); // 5151
+  if (filter === "PROCEDIMIENTO") {
+    const procs = await buildProcs();
+    return procs.sort((a, b) => (a.fecha > b.fecha ? -1 : 1));
   }
 
-  const chunks = await Promise.all(tasks);
-  return chunks.flat().sort((a, b) => (a.fecha > b.fecha ? -1 : 1));
+  const [recetas, procs] = await Promise.all([buildRecetas(), buildProcs()]);
+  return [...consultas, ...recetas, ...procs].sort((a, b) => (a.fecha > b.fecha ? -1 : 1));
 }

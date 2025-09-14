@@ -23,7 +23,7 @@ const GROUPS: Group[] = [
   },
   {
     label: "Historial",
-    icon: "👤",
+    icon: "🗂️",
     items: [
       { label: "Historial Médico", to: "/admin/Historial" },
     ],
@@ -38,7 +38,7 @@ const GROUPS: Group[] = [
   },
   {
     label: "Administrador",
-    icon: "🩺",
+    icon: "👨‍💼",
     items: [
       { label: "Crear usuarios", to: "/admin/usuarios/crear"},
       { label: "Ver usuarios", to: "/admin/usuarios" },

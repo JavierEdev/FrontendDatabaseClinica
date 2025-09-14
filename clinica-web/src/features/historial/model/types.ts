@@ -1,6 +1,6 @@
 // Tipos base del historial
 
-export type HistorialTipo = "CONSULTA" | "ANTECEDENTE" | "RECETA" | "IMAGEN";
+export type HistorialTipo = "CONSULTA" | "RECETA" | "PROCEDIMIENTO";
 
 // filtro del UI
 export type HistFilter = "todos" | HistorialTipo;
@@ -12,5 +12,5 @@ export type HistorialItem = {
   tipo: HistorialTipo;
   titulo?: string;
   detalle?: string;
-  meta?: any;               // <- para poder llevar el raw (idConsulta, etc.)
+  meta?: any;               // raw (idConsulta, etc.)
 };
