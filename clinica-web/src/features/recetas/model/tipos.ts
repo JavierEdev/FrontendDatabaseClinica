@@ -19,4 +19,11 @@ export type RecetaCreateDto = {
   items: RecetaItemDto[];
 };
 
+export type RecetaUpdateDto = {
+  medicamento: string;
+  dosis: string;
+  frecuencia: string;
+  duracion: string;
+};
+
 export type ApiResponse<T> = { success: boolean; message: string; data: T };

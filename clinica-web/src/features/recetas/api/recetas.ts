@@ -1,4 +1,4 @@
-import type { RecetaVm, RecetaCreateDto, ApiResponse } from "../model/tipos";
+import type { RecetaVm, RecetaCreateDto, RecetaUpdateDto, ApiResponse } from "../model/tipos";
 import { api } from "@/features/auth/api/api";
 
 const BASE = "/api/recetas";
@@ -23,13 +23,23 @@ export async function porConsulta(idConsulta: number): Promise<RecetaVm[]> {
 
 // POST /api/recetas
 export async function crear(body: RecetaCreateDto) {
-  // ApiResponse<{ idConsulta:number; total:number; ids:number[] }>
   return api(`${BASE}`, {
     method: "POST",
     body: JSON.stringify(body),
     headers: { "Content-Type": "application/json" },
     auth: true,
   });
+}
+
+// PUT /api/recetas/{id}
+export async function actualizar(id: number, body: RecetaUpdateDto): Promise<RecetaVm> {
+  const res = await api<RecetaVm | ApiResponse<RecetaVm>>(`${BASE}/${id}`, {
+    method: "PUT",
+    auth: true,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return (res as any)?.data ?? (res as RecetaVm);
 }
 
 export const pdfUrl = (id: number) => `${BASE}/${id}/pdf`;

@@ -9,12 +9,10 @@ export default function RecetaForm({
   initialIdConsulta?: number;
   onSubmit: (v: RecetaCreateDto) => void | Promise<void>;
 }) {
-  // ID consulta como textbox numérico (sin flechas)
   const [idConsultaTxt, setIdConsultaTxt] = useState<string>(
     initialIdConsulta != null ? String(initialIdConsulta) : ""
   );
 
-  // campos de UNA receta
   const [medicamento, setMedicamento] = useState("");
   const [dosis, setDosis] = useState("");
   const [frecuencia, setFrecuencia] = useState("");
@@ -40,7 +38,7 @@ export default function RecetaForm({
 
   return (
     <form id="receta-form" onSubmit={submit} className={styles.form}>
-      {/* ID Consulta */}
+
       <div className={styles.field}>
         <label className={styles.label}>ID Consulta</label>
         <input
@@ -56,7 +54,6 @@ export default function RecetaForm({
         />
       </div>
 
-      {/* Campos de la receta */}
       <div className={styles.rowGrid}>
         <div className={styles.field}>
           <label className={styles.label}>Medicamento</label>

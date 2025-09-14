@@ -1,14 +1,15 @@
 import type { RecetaVm } from "../model/tipos";
-import styles from "@/pages/admin/usuarios/List.module.css"; // reutilizamos estilos
+import styles from "@/pages/admin/recetas/ListReceta.module.css";
 
 export default function RecetasTable({
-  rows, loading, error, onView, onPdf
+  rows, loading, error, onView, onPdf, onEdit
 }: {
   rows: RecetaVm[];
   loading?: boolean;
   error?: string;
   onView?: (id: number) => void;
   onPdf?: (id: number) => void;
+  onEdit?: (id: number) => void;
 }) {
   return (
     <div className={styles.tableWrap}>
@@ -44,6 +45,7 @@ export default function RecetasTable({
               <td>{r.duracion}</td>
               <td className={`${styles.right} ${styles.actions}`}>
                 <button onClick={()=>onView?.(r.idReceta)}>Ver</button>
+                <button onClick={()=>onEdit?.(r.idReceta)}>Editar</button>
                 <button onClick={()=>onPdf?.(r.idReceta)}>PDF</button>
               </td>
             </tr>

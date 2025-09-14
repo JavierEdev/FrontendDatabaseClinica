@@ -1,0 +1,100 @@
+/* base (mismo look que RecetaModal pero con inputs) */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 70;
+}
+.modal {
+  background: #fff;
+  border-radius: 16px;
+  width: min(860px, 96vw);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  font-size: 15.5px;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eef2f7;
+}
+.title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+}
+.close {
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  cursor: pointer;
+}
+.body {
+  padding: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+.label {
+  color: #1e3a8a;
+  font-weight: 800;
+  font-size: 14px;
+}
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  outline: none;
+}
+.input:focus {
+  border-color: #c7d2fe;
+  box-shadow: 0 0 0 3px #eef2ff;
+}
+
+.footer {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #eef2f7;
+  padding-top: 12px;
+}
+.btnPrimary {
+  background: #2563eb;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btnPrimary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.btnGhost {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+.alertError {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin-top: 10px;
+}
