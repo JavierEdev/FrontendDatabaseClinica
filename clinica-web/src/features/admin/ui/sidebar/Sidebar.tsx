@@ -53,6 +53,13 @@ const GROUPS: Group[] = [
     ],
   },
   {
+    label: "Pagos",
+    icon: "💳",
+    items: [
+      { label: "Procesar Pago", to: "/admin/pagos/" }
+    ],
+  },
+  {
     label: "Administrador",
     icon: "👨‍💼",
     items: [

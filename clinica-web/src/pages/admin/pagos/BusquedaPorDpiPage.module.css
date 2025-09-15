@@ -1,0 +1,275 @@
+:root {
+  --bg: #f6f8fb;
+  --panel: #ffffff;
+  --border: #e5e7eb;
+  --text: #0f172a;
+  --muted: #64748b;
+  --brand: #2563eb;
+  --brand-700: #1d4ed8;
+  --ok: #0ea5e9;
+  --ok-ink: #075985;
+  --warn: #f59e0b;
+  --danger: #ef4444;
+  --success: #16a34a;
+}
+
+.page {
+  min-height: 100vh;
+  background: var(--bg);
+  padding: 28px 16px 60px;
+  display: grid;
+  place-items: start center;
+}
+
+.header {
+  width: 100%;
+  max-width: 960px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.title {
+  margin: 0;
+  margin-right: auto;
+  color: var(--text);
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: .2px;
+}
+
+.header input {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+  width: 340px;
+}
+.header input:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+}
+
+.btnSec {
+  background: #eef2ff;
+  color: #1e40af;
+  border: 1px solid #e0e7ff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .15s ease;
+}
+.btnSec:hover { background: #e0e7ff; }
+.btnSec:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Cards */
+.card {
+  width: 100%;
+  max-width: 960px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+  margin-top: 10px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+
+.cardTitle {
+  font-weight: 700;
+  color: #1f2937;
+  margin: 2px 0 10px;
+}
+
+/* Fila etiqueta/valor */
+.rows { display: grid; gap: 10px; }
+.row { display: grid; grid-template-columns: 160px 1fr; gap: 6px; }
+.label { color: #334155; font-weight: 600; font-size: 13px; }
+.value { color: var(--text); font-size: 14px; }
+.muted { color: var(--muted); font-size: 12px; }
+.mono { font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; }
+
+/* Subtítulo secciones dentro de la card */
+.sectionSubTitle {
+  margin: 14px 0 8px;
+  color: #1e40af;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* Tablas pequeñas */
+.tableWrap { overflow: auto; border-radius: 10px; border: 1px solid var(--border); }
+.miniTable { width: 100%; border-collapse: collapse; background: #fff; }
+.miniTable th,
+.miniTable td { padding: 10px 12px; font-size: 14px; }
+.miniTable thead th { background: #f8fafc; color: #334155; text-align: left; }
+.miniTable tbody tr + tr td { border-top: 1px solid #eef2f7; }
+.right { text-align: right; }
+
+/* Badges de estado */
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.st_CONFIRMADA { background: #dcfce7; color: var(--success); }
+.st_CANCELADA { background: #fee2e2; color: var(--danger); }
+.st_REPROGRAMADA { background: #ffedd5; color: #9a3412; }
+.st_PENDIENTE { background: #e0e7ff; color: #4338ca; }
+.st_PAGADA {
+  background: #0ea5e9;   /* celeste */
+  color: #fff;
+}
+
+/* Empty */
+.empty {
+  border: 1px dashed #cbd5e1;
+  background: #f8fafc;
+  color: #64748b;
+  padding: 18px;
+  border-radius: 14px;
+  text-align: center;
+}
+
+/* Header de la card de citas con espacio antes de la tabla */
+.cardTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px; /* ← más aire entre “Recargar” y la tabla */
+}
+
+/* Botones compactos (para acciones por fila) */
+.btnSm { padding: 6px 10px; font-size: 12px; }
+
+/* Contenedor de acciones por fila */
+.rowBtns {
+  display: inline-flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+/* ==== MODAL (facturar y cobrar) ==== */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45); /* slate-900/45 */
+  display: grid;
+  place-items: center;
+  z-index: 80;
+  padding: 16px;
+}
+
+.modal {
+  width: 100%;
+  max-width: 720px;
+  background: #fff;
+  border: 1px solid #e5e7eb;         /* gray-200 */
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.18);
+  padding: 16px;
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  color: #0f172a;                    /* slate-900 */
+}
+
+.modalClose {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #0f172a;
+  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  line-height: 30px;
+  text-align: center;
+  cursor: pointer;
+}
+.modalClose:hover { background: #f8fafc; }
+
+/* Reutiliza tu grid/field existentes; si no los tienes, deja estas */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 860px) { .grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .grid { grid-template-columns: 1fr; } }
+
+.field { display: grid; gap: 6px; }
+.field > span { font-size: 12px; color: #475569; }
+.field input, .field select, .field textarea {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  outline: none;
+  font-size: 14px;
+  background: #fff;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+}
+
+.sectionSubTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e40af;
+  margin-top: 10px;
+  margin-bottom: 6px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+/* tabla mini para líneas de factura (si no existe ya en tu CSS) */
+.tableWrap { overflow: auto; border-radius: 12px; border: 1px solid #eef0f3; }
+.miniTable { width: 100%; border-collapse: collapse; background: #fff; }
+.miniTable th, .miniTable td { padding: 10px 12px; border-top: 1px solid #f1f5f9; }
+.miniTable thead th { background: #f8fafc; color: #0f172a; text-align: left; font-weight: 700; }
+.right { text-align: right; }
+
+/* botones (reutiliza si ya existen) */
+.btnPrimary {
+  background: #3b82f6;
+  color: #fff; border: 0; border-radius: 10px;
+  padding: 10px 16px; cursor: pointer;
+  box-shadow: 0 3px 0 rgba(0,0,0,.06);
+}
+.btnPrimary:hover { filter: brightness(0.98); }
+.btnGhost {
+  background: #f1f5f9;
+  color: #0f172a; border: 0; border-radius: 10px; padding: 10px 16px; cursor: pointer;
+}
+.btnDisabled, .btnPrimary:disabled, .btnGhost:disabled { opacity: .6; cursor: default; }
+
+/* mensajes */
+.empty { padding: 12px; color: #475569; }
+.error {
+  color: #b91c1c; background: #fee2e2; border: 1px solid #fecaca;
+  padding: 10px 12px; border-radius: 10px;
+}
