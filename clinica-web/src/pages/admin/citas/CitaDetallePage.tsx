@@ -16,6 +16,9 @@ import { reprogramarCita } from "@/features/citas/api/citas";
 
 import CancelCitaModal from "@/features/citas/components/CancelCitaModal";
 
+import ReassignMedicoModal from "@/features/citas/components/ReassignMedicoModal";
+import { reasignarMedicoDeCita } from "@/features/citas/api/citas";
+
 function fmtDT(iso: string) {
   const d = new Date(iso);
   return new Intl.DateTimeFormat("es-GT", {
@@ -56,6 +59,8 @@ export default function CitaDetallePage() {
   const [reOpen, setReOpen] = useState(false);
   const [reSaving, setReSaving] = useState(false);
   const [reErr, setReErr] = useState<string | null>(null);
+
+  const [reassignOpen, setReassignOpen] = useState(false);
 
   // Carga cita + paciente en paralelo
   useEffect(() => {
@@ -205,6 +210,15 @@ export default function CitaDetallePage() {
 
               <button
                 type="button"
+                className="btn btn-primary ms-2"
+                onClick={() => 
+                  setReassignOpen(true)}
+                >
+                  Reasignar médico
+              </button>
+
+              <button
+                type="button"
                 className="btn btn-danger ms-2"
                 onClick={() => {
                   setCancelErr(null);
@@ -307,6 +321,28 @@ export default function CitaDetallePage() {
         onConfirm={onConfirmReschedule}
         loading={reSaving}
         error={reErr}
+      />
+
+      <ReassignMedicoModal
+        open={reassignOpen}
+        citaId={det?.id ?? null}
+        fechaISO={det?.fecha}
+        especialidad={med?.especialidad ?? det?.especialidad ?? null}
+        onClose={() => setReassignOpen(false)}
+        onSaved={async (nuevoMedicoId) => {
+          const nuevo = await fetchMedicoById(nuevoMedicoId).catch(() => null);
+          if (!nuevo) {
+            setDet(prev => (prev ? { ...prev, idMedico: nuevoMedicoId } : prev));
+            return;
+          }
+          setDet(prev =>
+            prev
+              ? { ...prev, idMedico: nuevoMedicoId, medicoNombre: `${nuevo.nombres} ${nuevo.apellidos}` }
+              : prev
+          );
+          setMed(nuevo);
+          alert("Médico reasignado correctamente.");
+        }}
       />
 
       <CancelCitaModal

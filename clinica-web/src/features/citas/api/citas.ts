@@ -202,3 +202,71 @@ export async function reprogramarCita(
   const json = JSON.parse(text);
   return Boolean(json?.success);
 }
+
+// ---------- GET /api/citas/:id/medicos-disponibles ----------
+export type MedicoDisponible = {
+  id: number;
+  nombreCompleto: string;
+  especialidad: string;
+  horario: string;
+};
+
+export async function fetchMedicosDisponiblesParaCita(
+  idCita: number,
+  signal?: AbortSignal
+): Promise<MedicoDisponible[]> {
+  const url = `${buildCitasUrl()}/${idCita}/medicos-disponibles`;
+  if (import.meta.env.DEV) console.log("[citas] GET", url);
+
+  const res = await fetch(url, { method: "GET", headers: { Accept: "application/json" }, signal });
+  const text = await ensureJson(res, url);
+  const json = JSON.parse(text) as { success?: boolean; data?: MedicoDisponible[]; message?: string };
+
+  if (json?.success === false) throw new Error(json?.message || "No se pudieron cargar los médicos");
+  return Array.isArray(json?.data) ? json!.data! : [];
+}
+
+// ---------- POST /api/citas/:id/reasignar-medico ----------
+export async function reasignarMedicoDeCita(
+  idCita: number,
+  nuevoMedicoId: number,
+  signal?: AbortSignal
+): Promise<{ success: boolean; message?: string }> {
+  const url = `${buildCitasUrl()}/${idCita}/reasignar-medico`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ nuevoMedicoId }),
+    signal,
+  });
+
+  const ct = (res.headers.get("content-type") || "").toLowerCase();
+  const raw = await res.text();
+
+  if (!res.ok) {
+    let msg = "No se pudo reasignar el médico.";
+    if (raw) {
+      if (ct.includes("application/json")) {
+        try {
+          const j = JSON.parse(raw);
+          msg = j?.message || j?.error || j?.Message || msg;
+        } catch {
+          msg = raw.trim() || msg;
+        }
+      } else {
+        msg = raw.trim() || msg;
+      }
+    }
+    throw new Error(msg);
+  }
+
+  if (raw && ct.includes("application/json")) {
+    try {
+      const j = JSON.parse(raw);
+      return { success: true, message: j?.message || "Médico reasignado correctamente." };
+    } catch {
+    }
+  }
+  return { success: true, message: "Médico reasignado correctamente." };
+}
