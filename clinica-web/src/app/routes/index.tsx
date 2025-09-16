@@ -25,6 +25,8 @@ import RecetaCrearPage from "@/pages/admin/recetas/CrearRecetas";
 import NuevaConsultaPage from "@/pages/admin/historial/NuevaConsultaPage";
 import ListImagenes from "@/pages/admin/imagenologia/List";
 import ProcesarPagos from "@/pages/admin/pagos/BusquedaPorDpiPage";
+import ReportesMedicosList from "@/pages/admin/medicos/ReportesMedicosList";
+import ReporteMedicoDetalle from "@/pages/admin/medicos/ReporteMedicoDetalle";
 
 // Protegidas generales
 import { ProtectedRoute } from "@/features/auth/guards/ProtectedRoute";
@@ -100,6 +102,8 @@ export function AppRoutes() {
         <Route path="pacientes/:idPaciente/consultas/nueva" element={<NuevaConsultaPage />} />
         <Route path="imagenologia" element={<ListImagenes />} />
         <Route path="pagos" element={<ProcesarPagos />} />
+        <Route path="medicos/reportes" element={<ReportesMedicosList />} />
+        <Route path="medicos/reportes/:idMedico" element={<ReporteMedicoDetalle />} />
       </Route>
 
       {/* Fallback */}
@@ -107,3 +111,4 @@ export function AppRoutes() {
     </Routes>
   );
 }
+

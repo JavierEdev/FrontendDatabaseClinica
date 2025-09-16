@@ -50,6 +50,7 @@ const GROUPS: Group[] = [
     items: [
       { label: "Lista de médicos", to: "/admin/medicos/" },
       { label: "Agregar Medicos", to: "/admin/medicos/nuevo" },
+      { label: "Reporteria", to: "/admin/medicos/reportes" },
     ],
   },
   {

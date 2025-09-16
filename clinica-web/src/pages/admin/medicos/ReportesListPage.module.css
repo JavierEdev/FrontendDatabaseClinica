@@ -1,0 +1,67 @@
+/* src/pages/admin/medicos/ReportesListPage.module.css */
+.page { max-width: 1200px; margin: 0 auto; padding: 24px; }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.title { font-size: 24px; font-weight: 800; }
+.subtitle { color: #6b7280; }
+
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 12px 0; }
+.kpi { background: #fff; border-radius: 12px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+.kpiLabel { color: #6b7280; font-size: 12px; }
+.kpiValue { font-size: 22px; font-weight: 700; }
+
+/* 3 columnas: búsqueda | rango | chips  */
+.toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.input { width: 100%; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 10px; }
+
+/* rango en fila */
+.range { display: flex; gap: 10px; }
+.inputDate {
+  width: 160px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  outline: none; background:#fff;
+}
+.inputDate:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
+
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  border: 1px solid #e5e7eb; background: #fff;
+  padding: 8px 10px; border-radius: 999px; cursor: pointer;
+}
+.chip:hover { background: #f3f4f6; }
+
+.card { background: #fff; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.06); overflow: hidden; }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { padding: 12px; border-bottom: 1px solid #f3f4f6; text-align: left; }
+.table thead th { background: #fafafa; font-weight: 700; }
+
+.actions { text-align: right; }
+.btn {
+  display: inline-block;
+  text-decoration: none;             /* sin subrayado */
+  color: #0f172a;                    /* igual que el resto */
+  border: 1px solid #e5e7eb;
+  background:#fff;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.btn:hover { background: #f3f4f6; }
+
+.right { text-align: right; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace; }
+.empty { padding: 16px; color: #6b7280; text-align: center; }
+
+@media (max-width: 980px) {
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .toolbar { grid-template-columns: 1fr; }
+  .range { flex-wrap: wrap; }
+}
