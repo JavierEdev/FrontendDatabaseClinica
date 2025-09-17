@@ -157,7 +157,7 @@ export default function DashboardPage() {
               </button>
             </div>
             {citasEsp.length === 0 ? <div className="text-gray-500">Sin datos.</div> : (
-              <div style={{ width: "100%", height: 280 }}>
+              <div style={{ width: "100%", height: 310 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie data={citasEsp} dataKey="cantidad" nameKey="especialidad" label outerRadius={100}>
