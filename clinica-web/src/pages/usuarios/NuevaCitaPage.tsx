@@ -9,6 +9,7 @@ import {
 import type { Medico } from "@/features/medicos/models/Medico";
 import { crearCita } from "@/features/citas/api/citas";
 import { obtenerIdPacientePorUsuario } from "@/features/usuarios/api/usuarios";
+import { REGEX, isDateUS } from "@/shared/validators";
 
 function cx(...xs: Array<string | false | null | undefined>) {
   return xs.filter(Boolean).join(" ");
@@ -79,6 +80,8 @@ export default function NuevaCitaPage() {
   const [doctorSel, setDoctorSel] = useState<Medico | null>(null);
   const [fechaSel, setFechaSel] = useState<string | null>(null); // yyyy-mm-dd
   const [horaSel, setHoraSel] = useState("");
+  // Error local del campo fecha (no choca con errorDocs/errorDisp)
+  const [errorFecha, setErrorFecha] = useState<string>("");
 
   // Disponibilidad
   const [horarios, setHorarios] = useState<string[]>([]);
@@ -122,6 +125,13 @@ export default function NuevaCitaPage() {
       ),
     [doctores, filtroEsp, filtroMedico]
   );
+
+   // Fecha de hoy en formato YYYY-MM-DD (ajustada a hora local)
+  const todayISO = (() => {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 10); // "YYYY-MM-DD"
+  })();
 
   // cada vez que cambie el doctor, limpiamos selección de fecha/hora y horarios
   useEffect(() => {
@@ -306,10 +316,27 @@ export default function NuevaCitaPage() {
             <span>Selecciona una fecha</span>
             <input
               type="date"
-              value={fechaSel ?? ""}
-              onChange={(e) => setFechaSel(e.target.value || null)}
-              disabled={!doctorSel || loadingPaciente || !!errorPaciente}
+              name="fecha"
+              value={fechaSel ?? ""}                       // seguimos usando tu state
+              onChange={(e) => setFechaSel(e.target.value)}// el datepicker entrega YYYY-MM-DD
+
+              // (opcional) límites de fecha:
+              min={todayISO} // impide fechas pasadas
+              // max={todayISO} // impide fechas futuras
+
+              // Bloquear escritura manual (solo usar el calendario)
+              onKeyDown={(e) => {
+                const allowed = [
+                  "Tab", "Backspace", "Delete", "ArrowLeft", "ArrowRight", "Home", "End"
+                ];
+                if (e.ctrlKey || e.metaKey || allowed.includes(e.key)) return; // permitir navegación
+                e.preventDefault(); // bloquear cualquier otro carácter
+              }}
+              onPaste={(e) => e.preventDefault()} // bloquear pegar
             />
+            {/* Si quieres mostrar un error local, úsalo aquí:
+            {errorFecha && <small className={styles.muted} style={{color:"#b91c1c"}}>{errorFecha}</small>}
+            */}
           </label>
 
           <label className={styles.field}>
