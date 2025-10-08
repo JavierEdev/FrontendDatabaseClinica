@@ -1,3 +1,4 @@
+// src/pages/admin/pacientes/List.tsx
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import styles from "./List.module.css";
@@ -120,7 +121,7 @@ function EmergencyContactModal({
       <div
         className={styles.modal}
         onClick={(e) => e.stopPropagation()}
-        style={{ maxWidth: 720, width: "min(720px, 96vw)" }}
+        style={{ maxWidth: 720, width: "min(720px, 96vw)", maxHeight: "84vh", overflowY: "auto" }}
       >
         <div className={styles.modalHeader}>
           <h3 className={styles.modalTitle}>Agregar contacto de emergencia</h3>
@@ -178,7 +179,7 @@ function EmergencyContactModal({
 }
 
 /* ──────────────────────────────────────────────────────────────────────────────
-   Modal: Ver paciente (solo lectura)
+   Modal: Ver paciente (solo lectura, estilo “médicos”)
    ────────────────────────────────────────────────────────────────────────────── */
 function PacienteViewModal({
   open,
@@ -206,8 +207,7 @@ function PacienteViewModal({
       <div
         className={styles.modal}
         onClick={(e) => e.stopPropagation()}
-        /* más angosta para usar mejor el espacio */
-        style={{ maxWidth: 760, width: "min(760px, 94vw)" }}
+        style={{ maxWidth: 960, width: "min(960px, 96vw)", maxHeight: "84vh", overflowY: "auto" }}
       >
         <div className={styles.modalHeader}>
           <h3 className={styles.modalTitle}>Paciente #{paciente.idPaciente}</h3>
@@ -215,7 +215,7 @@ function PacienteViewModal({
         </div>
 
         <div className={styles.modalBody}>
-          {/* Cabecera con nombre y DPI */}
+          {/* Cabecera similar a médicos */}
           <div className={styles.modalHint} style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <strong style={{ fontWeight: 700 }}>{fullName || "—"}</strong>
             {paciente.dpi && (
@@ -226,48 +226,56 @@ function PacienteViewModal({
             )}
           </div>
 
-          {/* Grid etiqueta : valor */}
-          <dl className={styles.kvGrid}>
-            <div className={styles.kvItem}>
-              <dt className={styles.kvLabel}>Nombre(s)</dt>
-              <dd className={styles.kvValue}>{paciente.nombres || "—"}</dd>
-            </div>
-            <div className={styles.kvItem}>
-              <dt className={styles.kvLabel}>Apellidos</dt>
-              <dd className={styles.kvValue}>{paciente.apellidos || "—"}</dd>
-            </div>
-            <div className={styles.kvItem}>
-              <dt className={styles.kvLabel}>DPI</dt>
-              <dd className={styles.kvValue}>{paciente.dpi || "—"}</dd>
-            </div>
-            <div className={styles.kvItem}>
-              <dt className={styles.kvLabel}>Fecha de nacimiento</dt>
-              <dd className={styles.kvValue}>
+          {/* Grid 2 columnas con campos de solo lectura (apariencia de inputs) */}
+          <div className={styles.viewGrid}>
+            <label className={styles.viewField}>
+              <span className={styles.viewLabel}>Nombre(s)</span>
+              <div className={styles.roInput}>{paciente.nombres || "—"}</div>
+            </label>
+
+            <label className={styles.viewField}>
+              <span className={styles.viewLabel}>Apellidos</span>
+              <div className={styles.roInput}>{paciente.apellidos || "—"}</div>
+            </label>
+
+            <label className={styles.viewField}>
+              <span className={styles.viewLabel}>DPI</span>
+              <div className={styles.roInput}>{paciente.dpi || "—"}</div>
+            </label>
+
+            <label className={styles.viewField}>
+              <span className={styles.viewLabel}>Fecha de nacimiento</span>
+              <div className={styles.roInput}>
                 {formatDateNice(paciente.fechaNacimiento)}
                 <span className={styles.kvPill} style={{ marginLeft: 10 }}>{years ?? "—"} años</span>
-              </dd>
-            </div>
-            <div className={styles.kvItem}>
-              <dt className={styles.kvLabel}>Sexo</dt>
-              <dd className={styles.kvValue}>{paciente.sexo || "—"}</dd>
-            </div>
-            <div className={styles.kvItem}>
-              <dt className={styles.kvLabel}>Teléfono</dt>
-              <dd className={styles.kvValue}>{paciente.telefono || "—"}</dd>
-            </div>
-            <div className={styles.kvItem}>
-              <dt className={styles.kvLabel}>Correo</dt>
-              <dd className={styles.kvValue}>{paciente.correo || "—"}</dd>
-            </div>
-            <div className={styles.kvItem}>
-              <dt className={styles.kvLabel}>Nº Historia Clínica</dt>
-              <dd className={styles.kvValue}>{paciente.numeroHistoriaClinica || "—"}</dd>
-            </div>
-            <div className={styles.kvItemWide}>
-              <dt className={styles.kvLabel}>Dirección</dt>
-              <dd className={styles.kvValue}>{paciente.direccion || "—"}</dd>
-            </div>
-          </dl>
+              </div>
+            </label>
+
+            <label className={styles.viewField}>
+              <span className={styles.viewLabel}>Sexo</span>
+              <div className={styles.roInput}>{paciente.sexo || "—"}</div>
+            </label>
+
+            <label className={styles.viewField}>
+              <span className={styles.viewLabel}>Teléfono</span>
+              <div className={styles.roInput}>{paciente.telefono || "—"}</div>
+            </label>
+
+            <label className={styles.viewField}>
+              <span className={styles.viewLabel}>Correo</span>
+              <div className={styles.roInput}>{paciente.correo || "—"}</div>
+            </label>
+
+            <label className={styles.viewField}>
+              <span className={styles.viewLabel}>Nº Historia Clínica</span>
+              <div className={styles.roInput}>{paciente.numeroHistoriaClinica || "—"}</div>
+            </label>
+
+            <label className={`${styles.viewField} ${styles.viewFieldFull}`}>
+              <span className={styles.viewLabel}>Dirección</span>
+              <div className={styles.roInput}>{paciente.direccion || "—"}</div>
+            </label>
+          </div>
 
           <div className={styles.modalActions} style={{ marginTop: 18, justifyContent: "flex-end" }}>
             <button className={styles.btnGhost} onClick={onClose}>Cerrar</button>
@@ -310,7 +318,7 @@ export default function PacientesListPage() {
   }, [page, pageSize]);
 
   const items = useMemo(() => {
-    const src = data?.items ?? [];
+    const src = (data?.items ?? []);
     const filtered = q.trim()
       ? src.filter((x) => {
           const full = `${x.nombres} ${x.apellidos}`.toLowerCase();

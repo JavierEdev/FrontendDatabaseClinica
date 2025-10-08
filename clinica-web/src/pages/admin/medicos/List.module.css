@@ -325,3 +325,126 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
   border-color: var(--primary-600);
 }
+
+
+/* ----- Grid etiqueta/valor (igual al de pacientes) ----- */
+.kvGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
+}
+.kvItem { display: contents; }
+.kvItemWide { grid-column: 1 / -1; }
+
+.kvLabel {
+  grid-column: span 1;
+  align-self: end;
+  font-weight: 600;
+  font-size: 13px;
+  color: #374151;
+}
+.kvValue {
+  grid-column: span 1;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px 12px;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  color: #111827;
+}
+
+/* Pastilla para especialidad / chips */
+.kvPill {
+  display: inline-block;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+}
+
+/* Valor multi-línea para campos largos (dirección, descripciones, etc.) */
+.kvValueMultiline {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px 12px;
+  color: #111827;
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 38px;
+  display: block; /* ocupa toda la celda */
+}
+
+/* Subtítulo “Otros datos” */
+.sectionTitle {
+  margin: 0 0 6px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #374151;
+}
+
+
+/* Modal más angosta y responsive */
+.modalCompact {
+  max-width: 860px;          /* ancho máx en desktop */
+  width: min(860px, 96vw);   /* respeta pantallas pequeñas */
+}
+
+/* ====== Grid de pares clave/valor en dos columnas ====== */
+.kvGrid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* 2 columnas */
+  column-gap: 16px;
+  row-gap: 12px;
+}
+
+.kvItem { display: grid; grid-template-rows: auto auto; }
+.kvItemFull { grid-column: 1 / -1; } /* ocupa ancho completo (dirección, textos largos) */
+
+.kvLabel {
+  color: #475569;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.kvValue {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px 12px;
+  color: #111827;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  word-break: break-word;
+}
+
+.kvValueMultiline {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px 12px;
+  color: #111827;
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 38px;
+}
+
+.kvPill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: #eef2ff;
+  color: #3730a3;
+}
+
+.sectionTitle {
+  margin: 0 0 6px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #374151;
+}
