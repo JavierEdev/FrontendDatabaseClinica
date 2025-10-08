@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import styles from "./List.module.css";
 import { listarPacientes } from "@/features/pacientes/api/pacientes";
 import { api } from "@/features/auth/api/api";
 import InitialMedicalInfoModal from "@/features/pacientes/components/InitialMedicalInfoModal";
 
+/* ──────────────────────────────────────────────────────────────────────────────
+   Tipos
+   ────────────────────────────────────────────────────────────────────────────── */
 type PacienteItem = {
   idPaciente: number;
   nombres: string;
@@ -15,6 +18,7 @@ type PacienteItem = {
   telefono?: string;
   correo?: string;
   numeroHistoriaClinica?: string;
+  direccion?: string;
 };
 
 type ListaResponse = {
@@ -24,6 +28,9 @@ type ListaResponse = {
   items: PacienteItem[];
 };
 
+/* ──────────────────────────────────────────────────────────────────────────────
+   Utils
+   ────────────────────────────────────────────────────────────────────────────── */
 function edad(fechaIso?: string) {
   if (!fechaIso) return null;
   const f = new Date(fechaIso);
@@ -35,7 +42,16 @@ function edad(fechaIso?: string) {
   return e;
 }
 
-/** ===== Modal interno para crear contacto de emergencia ===== */
+const formatDateNice = (iso?: string) => {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString(undefined, { day: "2-digit", month: "2-digit", year: "numeric" });
+};
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   Modal: Contacto de emergencia
+   ────────────────────────────────────────────────────────────────────────────── */
 function EmergencyContactModal({
   open,
   paciente,
@@ -55,7 +71,10 @@ function EmergencyContactModal({
 
   useEffect(() => {
     if (open) {
-      setNombre(""); setParentesco(""); setTelefono(""); setErr(null);
+      setNombre("");
+      setParentesco("");
+      setTelefono("");
+      setErr(null);
     }
   }, [open]);
 
@@ -98,18 +117,20 @@ function EmergencyContactModal({
 
   return (
     <div className={styles.modalOverlay} onClick={onClose} role="dialog" aria-modal="true">
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+      <div
+        className={styles.modal}
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxWidth: 720, width: "min(720px, 96vw)" }}
+      >
         <div className={styles.modalHeader}>
           <h3 className={styles.modalTitle}>Agregar contacto de emergencia</h3>
           <button className={styles.modalClose} onClick={onClose} aria-label="Cerrar">×</button>
         </div>
 
         <div className={styles.modalBody}>
-          <div className={styles.modalHint}>
+          <div className={styles.modalHint} style={{ marginBottom: 12 }}>
             Paciente:&nbsp;
-            <strong>
-              #{paciente.idPaciente} — {paciente.apellidos} {paciente.nombres}
-            </strong>
+            <strong>#{paciente.idPaciente} — {paciente.apellidos} {paciente.nombres}</strong>
             {paciente.dpi ? <span className={styles.sep}>›</span> : null}
             {paciente.dpi ? <span>DPI: {paciente.dpi}</span> : null}
           </div>
@@ -119,12 +140,7 @@ function EmergencyContactModal({
           <form onSubmit={submit} className={styles.modalForm}>
             <label className={styles.field}>
               <span>Nombre*</span>
-              <input
-                type="text"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                required
-              />
+              <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
             </label>
 
             <label className={styles.field}>
@@ -148,15 +164,9 @@ function EmergencyContactModal({
               />
             </label>
 
-            <div className={styles.modalActions}>
-              <button type="button" className={styles.btnGhost} onClick={onClose} disabled={saving}>
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className={`${styles.btnPrimary} ${saving ? styles.btnDisabled : ""}`}
-                disabled={saving}
-              >
+            <div className={styles.modalActions} style={{ justifyContent: "flex-end", gap: 10, marginTop: 14 }}>
+              <button type="button" className={styles.btnGhost} onClick={onClose} disabled={saving}>Cancelar</button>
+              <button type="submit" className={`${styles.btnPrimary} ${saving ? styles.btnDisabled : ""}`} disabled={saving}>
                 {saving ? "Guardando..." : "Guardar contacto"}
               </button>
             </div>
@@ -166,8 +176,111 @@ function EmergencyContactModal({
     </div>
   );
 }
-/** ===== Fin modal ===== */
 
+/* ──────────────────────────────────────────────────────────────────────────────
+   Modal: Ver paciente (solo lectura)
+   ────────────────────────────────────────────────────────────────────────────── */
+function PacienteViewModal({
+  open,
+  paciente,
+  onClose,
+}: {
+  open: boolean;
+  paciente: PacienteItem | null;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open || !paciente) return null;
+
+  const years = edad(paciente.fechaNacimiento);
+  const fullName = `${paciente.nombres ?? ""} ${paciente.apellidos ?? ""}`.trim();
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose} role="dialog" aria-modal="true">
+      <div
+        className={styles.modal}
+        onClick={(e) => e.stopPropagation()}
+        /* más angosta para usar mejor el espacio */
+        style={{ maxWidth: 760, width: "min(760px, 94vw)" }}
+      >
+        <div className={styles.modalHeader}>
+          <h3 className={styles.modalTitle}>Paciente #{paciente.idPaciente}</h3>
+          <button className={styles.modalClose} onClick={onClose} aria-label="Cerrar">×</button>
+        </div>
+
+        <div className={styles.modalBody}>
+          {/* Cabecera con nombre y DPI */}
+          <div className={styles.modalHint} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <strong style={{ fontWeight: 700 }}>{fullName || "—"}</strong>
+            {paciente.dpi && (
+              <>
+                <span className={styles.sep}>›</span>
+                <span className={styles.kvPill}>DPI: {paciente.dpi}</span>
+              </>
+            )}
+          </div>
+
+          {/* Grid etiqueta : valor */}
+          <dl className={styles.kvGrid}>
+            <div className={styles.kvItem}>
+              <dt className={styles.kvLabel}>Nombre(s)</dt>
+              <dd className={styles.kvValue}>{paciente.nombres || "—"}</dd>
+            </div>
+            <div className={styles.kvItem}>
+              <dt className={styles.kvLabel}>Apellidos</dt>
+              <dd className={styles.kvValue}>{paciente.apellidos || "—"}</dd>
+            </div>
+            <div className={styles.kvItem}>
+              <dt className={styles.kvLabel}>DPI</dt>
+              <dd className={styles.kvValue}>{paciente.dpi || "—"}</dd>
+            </div>
+            <div className={styles.kvItem}>
+              <dt className={styles.kvLabel}>Fecha de nacimiento</dt>
+              <dd className={styles.kvValue}>
+                {formatDateNice(paciente.fechaNacimiento)}
+                <span className={styles.kvPill} style={{ marginLeft: 10 }}>{years ?? "—"} años</span>
+              </dd>
+            </div>
+            <div className={styles.kvItem}>
+              <dt className={styles.kvLabel}>Sexo</dt>
+              <dd className={styles.kvValue}>{paciente.sexo || "—"}</dd>
+            </div>
+            <div className={styles.kvItem}>
+              <dt className={styles.kvLabel}>Teléfono</dt>
+              <dd className={styles.kvValue}>{paciente.telefono || "—"}</dd>
+            </div>
+            <div className={styles.kvItem}>
+              <dt className={styles.kvLabel}>Correo</dt>
+              <dd className={styles.kvValue}>{paciente.correo || "—"}</dd>
+            </div>
+            <div className={styles.kvItem}>
+              <dt className={styles.kvLabel}>Nº Historia Clínica</dt>
+              <dd className={styles.kvValue}>{paciente.numeroHistoriaClinica || "—"}</dd>
+            </div>
+            <div className={styles.kvItemWide}>
+              <dt className={styles.kvLabel}>Dirección</dt>
+              <dd className={styles.kvValue}>{paciente.direccion || "—"}</dd>
+            </div>
+          </dl>
+
+          <div className={styles.modalActions} style={{ marginTop: 18, justifyContent: "flex-end" }}>
+            <button className={styles.btnGhost} onClick={onClose}>Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   Página: Lista de Pacientes
+   ────────────────────────────────────────────────────────────────────────────── */
 export default function PacientesListPage() {
   const [data, setData] = useState<ListaResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -178,22 +291,21 @@ export default function PacientesListPage() {
   const [q, setQ] = useState("");
   const [sortAsc, setSortAsc] = useState(true);
 
-  // estado modales
+  // Modales
   const [modalOpen, setModalOpen] = useState(false);
   const [pacienteForModal, setPacienteForModal] = useState<PacienteItem | null>(null);
-
   const [imiOpen, setImiOpen] = useState(false);
   const [pacienteForImi, setPacienteForImi] = useState<PacienteItem | null>(null);
-
-  const nav = useNavigate();
+  const [viewOpen, setViewOpen] = useState(false);
+  const [pacienteView, setPacienteView] = useState<PacienteItem | null>(null);
 
   useEffect(() => {
     let alive = true;
     setLoading(true);
     listarPacientes(page, pageSize)
-      .then((res) => alive && (setData(res), setErr(null)))
-      .catch((e) => alive && setErr(e?.message ?? "Error"))
-      .finally(() => alive && setLoading(false));
+      .then((res) => { if (alive) { setData(res); setErr(null); } })
+      .catch((e) => { if (alive) setErr(e?.message ?? "Error"); })
+      .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [page, pageSize]);
 
@@ -202,10 +314,7 @@ export default function PacientesListPage() {
     const filtered = q.trim()
       ? src.filter((x) => {
           const full = `${x.nombres} ${x.apellidos}`.toLowerCase();
-          return (
-            full.includes(q.toLowerCase()) ||
-            (x.dpi ?? "").toLowerCase().includes(q.toLowerCase())
-          );
+          return full.includes(q.toLowerCase()) || (x.dpi ?? "").toLowerCase().includes(q.toLowerCase());
         })
       : src;
 
@@ -226,6 +335,9 @@ export default function PacientesListPage() {
 
   const openImiFor = (p: PacienteItem) => { setPacienteForImi(p); setImiOpen(true); };
   const closeImi = () => { setImiOpen(false); setPacienteForImi(null); };
+
+  const openView = (p: PacienteItem) => { setPacienteView(p); setViewOpen(true); };
+  const closeView = () => { setViewOpen(false); setPacienteView(null); };
 
   return (
     <div className={styles.wrap}>
@@ -277,11 +389,15 @@ export default function PacientesListPage() {
                 ))}
 
               {!loading && err && (
-                <tr><td colSpan={7} className={styles.error}>{err}</td></tr>
+                <tr>
+                  <td colSpan={7} className={styles.error}>{err}</td>
+                </tr>
               )}
 
               {!loading && !err && items.length === 0 && (
-                <tr><td colSpan={7} className={styles.empty}>No hay pacientes para mostrar.</td></tr>
+                <tr>
+                  <td colSpan={7} className={styles.empty}>No hay pacientes para mostrar.</td>
+                </tr>
               )}
 
               {!loading && !err && items.map((p) => (
@@ -299,8 +415,10 @@ export default function PacientesListPage() {
                   <td>{p.telefono ?? "—"}</td>
                   <td className={styles.truncate} title={p.correo ?? ""}>{p.correo ?? "—"}</td>
                   <td className={`${styles.right} ${styles.actions}`}>
-                    <button onClick={() => nav(`/admin/pacientes/${p.idPaciente}`)}>Ver</button>
-                    <button onClick={() => nav(`/admin/citas/nueva?paciente=${p.idPaciente}`)}>Nueva cita</button>
+                    <button onClick={() => openView(p)}>Ver</button>
+                    <Link to={`/admin/citas/nueva?paciente=${p.idPaciente}`} className={styles.btnGhost}>
+                      Nueva cita
+                    </Link>
                     <button onClick={() => openEmergencyFor(p)}>Agregar contacto de emergencia</button>
                     <button onClick={() => openImiFor(p)}>Info médica inicial</button>
                   </td>
@@ -318,15 +436,19 @@ export default function PacientesListPage() {
                 value={pageSize}
                 onChange={(e) => { setPageSize(parseInt(e.target.value, 10)); setPage(1); }}
               >
-                {[10, 20, 50, 100].map((n) => (<option key={n} value={n}>{n}</option>))}
+                {[10, 20, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
             </label>
           </div>
-          <div className={styles.range}>{data ? (<>{from}-{to} de {data.total}</>) : "—"}</div>
+          <div className={styles.range}>{data ? <>{from}-{to} de {data.total}</> : "—"}</div>
           <div className={styles.pager}>
-            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={!data || page <= 1 || loading}>← Anterior</button>
+            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={!data || page <= 1 || loading}>
+              ← Anterior
+            </button>
             <span>Página {page}</span>
-            <button onClick={() => setPage((p) => p + 1)} disabled={!data || to >= (data?.total ?? 0) || loading}>Siguiente →</button>
+            <button onClick={() => setPage((p) => p + 1)} disabled={!data || to >= (data?.total ?? 0) || loading}>
+              Siguiente →
+            </button>
           </div>
         </div>
       </div>
@@ -353,6 +475,9 @@ export default function PacientesListPage() {
         onClose={closeImi}
         onSaved={() => {}}
       />
+
+      {/* Modal: VER paciente (solo lectura) */}
+      <PacienteViewModal open={viewOpen} paciente={pacienteView} onClose={closeView} />
     </div>
   );
 }

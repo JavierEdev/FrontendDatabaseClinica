@@ -325,3 +325,38 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
   border-color: var(--primary-600);
 }
+
+/* ===== Vista solo-lectura: grid key/value ===== */
+.kvGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 18px;
+  margin-top: 6px;
+}
+
+.kvItem { display: contents; } /* permite que dt y dd ocupen columnas separadas */
+.kvItemWide { grid-column: 1 / -1; }
+
+.kvLabel {
+  grid-column: span 1;
+  font-size: 13px;
+  color: #475569; /* slate-600 */
+  margin-top: 6px;
+}
+
+.kvValue {
+  grid-column: span 1;
+  font-size: 15px;
+  color: #0f172a; /* slate-900 */
+  font-weight: 500;
+}
+
+/* Pastillita (edad, DPI) */
+.kvPill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: #eef2ff; /* indigo-50 */
+  color: #3730a3;      /* indigo-800 */
+}
