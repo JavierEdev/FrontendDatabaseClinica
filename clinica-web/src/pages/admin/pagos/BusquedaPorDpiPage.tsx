@@ -26,17 +26,30 @@ function fmtDT(iso: string) {
   }).format(d);
 }
 
+// Detecta si una cita viene pagada desde el backend (tolerante a formatos)
+function citaEstaPagada(c: Partial<CitaPaciente> | any): boolean {
+  const e = String(c?.estado ?? "").trim().toLowerCase();
+  if (e.includes("paga")) return true;          // "pagada", "pagado", etc.
+  if (c?.pagada === true) return true;          // flag booleano
+  if (c?.estado_pago && String(c.estado_pago).toLowerCase().includes("paga")) return true;
+  if (c?.factura?.estado && String(c.factura.estado).toLowerCase().includes("paga")) return true;
+  if (c?.facturaId || c?.idFactura || c?.pagoId || c?.idPago) return true;
+  return false;
+}
+
 /** ===== Modal para facturar y cobrar ===== */
 function PagoModal({
   open,
   idPaciente,
   idCita,
+  yaPagada = false,
   onClose,
   onDone,
 }: {
   open: boolean;
   idPaciente: number | null;
   idCita: number | null;
+  yaPagada?: boolean;
   onClose: () => void;
   onDone: () => void; // recarga de citas si queda pagada
 }) {
@@ -51,6 +64,13 @@ function PagoModal({
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
+
+  // candado: solo si la consulta seleccionada es la misma de la cita y está pagada
+  const lockPagada = (() => {
+    if (!yaPagada || !idCita || !idConsultaSel) return false;
+    const match = consultas.find((x) => x.idCita === idCita);
+    return !!match && match.idConsulta === Number(idConsultaSel);
+  })();
 
   // cargar consultas y preseleccionar por idCita si corresponde
   useEffect(() => {
@@ -67,21 +87,37 @@ function PagoModal({
         if (!open || !idPaciente) return;
 
         const list = await listarConsultasDePaciente(idPaciente, 1, 50, ac.signal);
-        setConsultas(list);
 
+        // 👇 Solo mostrar consultas de ESTA cita (si hay idCita)
+        const onlyThisCita = idCita ? list.filter(x => x.idCita === idCita) : list;
+        setConsultas(onlyThisCita);
+
+        // elegir la consulta a mostrar
         let pre: number | "" = "";
         if (idCita) {
-          const match = list.find((x) => x.idCita === idCita);
+          const match = onlyThisCita.find(x => x.idCita === idCita);
           if (match) pre = match.idConsulta;
         }
-        if (!pre && list.length > 0) {
-          // más reciente
-          pre = [...list].sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())[0]
+        if (!pre && onlyThisCita.length > 0) {
+          // más reciente dentro de esta cita (o de todas si no hay idCita)
+          pre = [...onlyThisCita]
+            .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())[0]
             .idConsulta;
         }
         setIdConsultaSel(pre);
 
-        if (pre) {
+        if (!pre) {
+          // no hay consulta asociada a la cita
+          setTotal(null);
+          return;
+        }
+
+        // si la cita ya está pagada y la consulta coincide, total en 0
+        const esLaDeLaCita = !!(idCita && onlyThisCita.find(x => x.idConsulta === pre));
+        if (yaPagada && esLaDeLaCita) {
+          setTotal(0);
+          setMonto("0.00");
+        } else {
           const t = await getTotalConsulta(Number(pre), ac.signal);
           setTotal(t);
           setMonto(String(t ?? 0));
@@ -93,7 +129,8 @@ function PagoModal({
       }
     })();
     return () => ac.abort();
-  }, [open, idPaciente, idCita]);
+  }, [open, idPaciente, idCita, yaPagada]);
+
 
   // cuando cambie la consulta, recalcular total
   useEffect(() => {
@@ -104,6 +141,13 @@ function PagoModal({
         setTotal(null);
         return;
       }
+      if (lockPagada) {
+        setTotal(0);
+        setMonto("0.00");
+        setErr(null);
+        return; // no consultamos total al backend
+      }
+
       try {
         setWorking(true);
         const t = await getTotalConsulta(Number(idConsultaSel), ac.signal);
@@ -117,12 +161,13 @@ function PagoModal({
       }
     })();
     return () => ac.abort();
-  }, [idConsultaSel, open]);
+  }, [idConsultaSel, open, lockPagada]);
 
-  const puedeGenerar = open && idPaciente && idConsultaSel && !factura && !working;
-  const puedePagar = open && factura && Number(monto) > 0 && !working;
+  const puedeGenerar = open && idPaciente && idConsultaSel && !factura && !working && !lockPagada;
+  const puedePagar   = open && factura && Number(monto) > 0 && !working && !lockPagada;
 
   async function onGenerar() {
+    if (lockPagada) { setErr("Esta consulta ya está pagada."); return; }
     if (!puedeGenerar) return;
     try {
       setWorking(true);
@@ -146,6 +191,7 @@ function PagoModal({
   }
 
   async function onPagar() {
+    if (lockPagada) { setErr("Esta consulta ya está pagada."); return; }
     if (!puedePagar) return;
     const val = Number(monto);
     if (!isFinite(val) || val <= 0) {
@@ -176,7 +222,6 @@ function PagoModal({
 
       // Si aún tiene saldo, mantener modal y mostrar saldo
       alert(`Pago registrado. Saldo pendiente: Q${resp.saldo_pendiente}`);
-      // refrescar valores de referencia
       setFactura((f) =>
         f ? { ...f, estado_pago: resp.estado_factura as any, monto_total: f.monto_total } : f
       );
@@ -195,15 +240,20 @@ function PagoModal({
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h3 className={styles.modalTitle}>Facturar y cobrar</h3>
-          <button className={styles.modalClose} onClick={onClose} aria-label="Cerrar">
-            ×
-          </button>
+          <button className={styles.modalClose} onClick={onClose} aria-label="Cerrar">×</button>
         </div>
 
         {loading ? (
           <div className={styles.empty}>Cargando…</div>
         ) : (
           <>
+            {/* Aviso cuando está pagada */}
+            {lockPagada && (
+              <div className={styles.empty} style={{ marginTop: 4, color: "#2563eb" }}>
+                Esta consulta ya está pagada. No es posible generar otra factura ni registrar otro pago.
+              </div>
+            )}
+
             <div className={styles.grid}>
               <label className={styles.field}>
                 <span>Consulta</span>
@@ -328,6 +378,7 @@ export default function BusquedaPorDpiPage() {
   // pago modal
   const [pagoOpen, setPagoOpen] = useState(false);
   const [citaParaPago, setCitaParaPago] = useState<number | null>(null);
+  const [citaPagada, setCitaPagada] = useState(false);
 
   async function buscar() {
     const q = dpi.trim();
@@ -339,7 +390,6 @@ export default function BusquedaPorDpiPage() {
       setPac(p);
       if (p?.idPaciente) {
         const list = await fetchCitasPorPaciente(p.idPaciente);
-        // si tu backend marca las pagadas, puedes filtrarlas aquí si quieres:
         setCitas(list || []);
       } else {
         setCitas([]);
@@ -377,6 +427,9 @@ export default function BusquedaPorDpiPage() {
 
   const abrirPago = (idCita: number) => {
     setCitaParaPago(idCita);
+    // buscamos la cita para saber si viene pagada
+    const c = citas.find((x) => x.id === idCita);
+    setCitaPagada(c ? citaEstaPagada(c) : false);
     setPagoOpen(true);
   };
 
@@ -541,6 +594,7 @@ export default function BusquedaPorDpiPage() {
         open={pagoOpen}
         idPaciente={pac?.idPaciente ?? null}
         idCita={citaParaPago}
+        yaPagada={citaPagada}
         onClose={() => { setPagoOpen(false); setCitaParaPago(null); }}
         onDone={recargarCitas}
       />
