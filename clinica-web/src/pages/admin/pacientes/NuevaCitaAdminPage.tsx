@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+// src/pages/admin/pacientes/NuevaCitaAdminPage.tsx
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styles from "./NuevaCitaPage.module.css"; // reutilizamos el mismo CSS
 import {
@@ -45,14 +46,10 @@ function formatDate(iso: string | null) {
 function toZulu(dateYmd: string, timeHm: string) {
   return `${dateYmd}T${timeHm}:00.000Z`;
 }
-// tu endpoint acepta "YYYY-MM-DDT00:00:00"
 const toDateTimeParam = (yyyyMMdd: string) => `${yyyyMMdd}T00:00:00`;
 
 /**
- * Pequeño selector de pacientes para admins:
- * - Carga paginado desde listarPacientes(page, pageSize)
- * - Permite buscar por nombre/DPI en la página actual (filtro local)
- * - Devuelve un PacienteItem seleccionado
+ * Selector de pacientes para admin (paginado + búsqueda local).
  */
 function PacientePicker({
   value,
@@ -118,18 +115,20 @@ function PacientePicker({
           value={value?.idPaciente ?? ""}
           onChange={(e) => {
             const id = Number(e.target.value);
-            const sel = (data?.items ?? []).find((p) => p.idPaciente === id)
-              // si el filtro ocultó el item, búscalo en la lista filtrada actual
-              ?? items.find((p) => p.idPaciente === id)
-              // si no está en esta página, mínimo deja el id
-              ?? (id ? { idPaciente: id, nombres: "", apellidos: "" } as PacienteItem : null);
+            const sel =
+              (data?.items ?? []).find((p) => p.idPaciente === id) ??
+              items.find((p) => p.idPaciente === id) ??
+              (id
+                ? ({ idPaciente: id, nombres: "", apellidos: "" } as PacienteItem)
+                : null);
             onChange(sel ?? null);
           }}
         >
           <option value="">— Seleccionar —</option>
           {items.map((p) => (
             <option key={p.idPaciente} value={p.idPaciente}>
-              #{p.idPaciente} — {p.apellidos} {p.nombres}{p.dpi ? ` — DPI ${p.dpi}` : ""}
+              #{p.idPaciente} — {p.apellidos} {p.nombres}
+              {p.dpi ? ` — DPI ${p.dpi}` : ""}
             </option>
           ))}
         </select>
@@ -173,12 +172,13 @@ function PacientePicker({
         </div>
       </div>
 
-      {/* Resumen del seleccionado */}
       <div className={styles.summary} style={{ marginTop: 12 }}>
         <span>
           <strong>Seleccionado:</strong>{" "}
           {value
-            ? `#${value.idPaciente} — ${value.apellidos ?? ""} ${value.nombres ?? ""}`.trim()
+            ? `#${value.idPaciente} — ${value.apellidos ?? ""} ${
+                value.nombres ?? ""
+              }`.trim()
             : "—"}
         </span>
         {value?.dpi && (
@@ -199,14 +199,12 @@ export default function NuevaCitaAdminPage() {
   // -------- Paciente (admin lo selecciona o viene en ?paciente=) --------
   const [pacienteSel, setPacienteSel] = useState<PacienteItem | null>(null);
 
-  // Si viene por querystring, precarga el id (si el item no está en la página, igual queda el id)
   useEffect(() => {
     const qp = sp.get("paciente");
     if (qp && !pacienteSel) {
       const id = Number(qp);
       if (id) setPacienteSel({ idPaciente: id, nombres: "", apellidos: "" });
     }
-    // solo on mount / cambio de query
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sp]);
 
@@ -229,6 +227,10 @@ export default function NuevaCitaAdminPage() {
   const [horarios, setHorarios] = useState<string[]>([]);
   const [loadingDisp, setLoadingDisp] = useState(false);
   const [errorDisp, setErrorDisp] = useState<string | null>(null);
+
+  // ---- Date picker: bloquear escritura y abrir al click en todo el campo ----
+  const dateRef = useRef<HTMLInputElement>(null);
+  const dateDisabled = !doctorSel;
 
   // Cargar médicos
   useEffect(() => {
@@ -268,7 +270,7 @@ export default function NuevaCitaAdminPage() {
     [doctores, filtroEsp, filtroMedico]
   );
 
-  // cada vez que cambie el doctor, limpiamos selección de fecha/hora y horarios
+  // reset al cambiar doctor
   useEffect(() => {
     setFechaSel(null);
     setHoraSel("");
@@ -316,14 +318,14 @@ export default function NuevaCitaAdminPage() {
       setSaving(true);
 
       const payload = {
-        idPaciente: pacienteSel.idPaciente,   // ← seleccionado por el admin
+        idPaciente: pacienteSel.idPaciente,
         idMedico: doctorSel.id,
-        fecha: toZulu(fechaSel, horaSel),     // "YYYY-MM-DDTHH:mm:00.000Z"
+        fecha: toZulu(fechaSel, horaSel), // "YYYY-MM-DDTHH:mm:00.000Z"
       };
 
       const res = await crearCita(payload);
       alert(res.message);
-      nav("/admin/citas"); // o donde lleve tu flujo de admin
+      nav("/admin/citas");
     } catch (e: any) {
       alert(e?.message || "No se pudo crear la cita.");
     } finally {
@@ -345,7 +347,9 @@ export default function NuevaCitaAdminPage() {
       {/* Encabezado */}
       <div className={styles.header}>
         <div className={styles.brand}>
-          <div className={styles.brandIcon} aria-hidden>+</div>
+          <div className={styles.brandIcon} aria-hidden>
+            +
+          </div>
           <div>
             <p className={styles.brandLabel}>Clínica · Admin</p>
             <h1 className={styles.title}>Nueva Cita (Administrador)</h1>
@@ -354,11 +358,10 @@ export default function NuevaCitaAdminPage() {
         <p className={styles.headerHelp}>Selecciona paciente, médico y horario</p>
       </div>
 
-      {/* Layout: columna izquierda (médicos) + derecha (selector de paciente + calendario/acciones) */}
+      {/* Layout */}
       <div className={styles.layout}>
-        {/* Columna izquierda: filtros + tarjetas de médicos */}
+        {/* Columna izquierda (médicos) */}
         <div>
-          {/* Filtros */}
           <div className={styles.filters}>
             <label className={styles.filterItem}>
               <span>Médico</span>
@@ -368,7 +371,9 @@ export default function NuevaCitaAdminPage() {
                 disabled={loadingDocs || !!errorDocs || doctores.length === 0}
               >
                 {medicos.map((m) => (
-                  <option key={m} value={m}>{m}</option>
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
                 ))}
               </select>
             </label>
@@ -381,13 +386,14 @@ export default function NuevaCitaAdminPage() {
                 disabled={loadingDocs || !!errorDocs || doctores.length === 0}
               >
                 {especialidades.map((e) => (
-                  <option key={e} value={e}>{e}</option>
+                  <option key={e} value={e}>
+                    {e}
+                  </option>
                 ))}
               </select>
             </label>
           </div>
 
-          {/* Lista doctores */}
           <div className={styles.doctorsGrid}>
             {loadingDocs && <div className={styles.empty}>Cargando médicos…</div>}
             {errorDocs && <div className={styles.empty}>{errorDocs}</div>}
@@ -396,44 +402,62 @@ export default function NuevaCitaAdminPage() {
               <div className={styles.empty}>No hay médicos para el filtro seleccionado.</div>
             )}
 
-            {!loadingDocs && !errorDocs && doctoresFiltrados.map((d) => (
-              <article
-                key={d.id}
-                className={cx(styles.card, doctorSel?.id === d.id && styles.cardSelected)}
-              >
-                <div className={styles.cardAvatar} aria-hidden>👩‍⚕️</div>
-                <div>
-                  <h3 className={styles.cardTitle}>{d.nombreCompleto}</h3>
-                  <p className={styles.cardSpec}>{d.especialidad}</p>
-                  <div className={styles.cardActions}>
-                    <button
-                      type="button"
-                      className={styles.btnPrimary}
-                      onClick={() => setDoctorSel(d)}
-                    >
-                      Seleccionar
-                    </button>
+            {!loadingDocs &&
+              !errorDocs &&
+              doctoresFiltrados.map((d) => (
+                <article
+                  key={d.id}
+                  className={cx(
+                    styles.card,
+                    doctorSel?.id === d.id && styles.cardSelected
+                  )}
+                >
+                  <div className={styles.cardAvatar} aria-hidden>
+                    👩‍⚕️
                   </div>
-                </div>
-              </article>
-            ))}
+                  <div>
+                    <h3 className={styles.cardTitle}>{d.nombreCompleto}</h3>
+                    <p className={styles.cardSpec}>{d.especialidad}</p>
+                    <div className={styles.cardActions}>
+                      <button
+                        type="button"
+                        className={styles.btnPrimary}
+                        onClick={() => setDoctorSel(d)}
+                      >
+                        Seleccionar
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
           </div>
 
-          {/* Resumen */}
           <div className={styles.summary}>
-            <span><strong>PacienteID:</strong> {pacienteSel?.idPaciente ?? "—"}</span>
+            <span>
+              <strong>PacienteID:</strong> {pacienteSel?.idPaciente ?? "—"}
+            </span>
             <span className={styles.sep}>›</span>
-            <span><strong>Doctor:</strong> {doctorSel ? doctorSel.nombreCompleto : "—"}</span>
+            <span>
+              <strong>Doctor:</strong>{" "}
+              {doctorSel ? doctorSel.nombreCompleto : "—"}
+            </span>
             <span className={styles.sep}>›</span>
-            <span><strong>Especialidad:</strong> {doctorSel ? doctorSel.especialidad : "—"}</span>
+            <span>
+              <strong>Especialidad:</strong>{" "}
+              {doctorSel ? doctorSel.especialidad : "—"}
+            </span>
             <span className={styles.sep}>›</span>
-            <span><strong>Fecha:</strong> {formatDate(fechaSel)}</span>
+            <span>
+              <strong>Fecha:</strong> {formatDate(fechaSel)}
+            </span>
             <span className={styles.sep}>›</span>
-            <span><strong>Hora:</strong> {horaSel || "—"}</span>
+            <span>
+              <strong>Hora:</strong> {horaSel || "—"}
+            </span>
           </div>
         </div>
 
-        {/* Columna derecha: selector de paciente + calendario + acciones */}
+        {/* Columna derecha (paciente + calendario + acciones) */}
         <div>
           <PacientePicker value={pacienteSel} onChange={setPacienteSel} />
 
@@ -443,10 +467,32 @@ export default function NuevaCitaAdminPage() {
             <label className={styles.field}>
               <span>Selecciona una fecha</span>
               <input
+                ref={dateRef}
                 type="date"
                 value={fechaSel ?? ""}
                 onChange={(e) => setFechaSel(e.target.value || null)}
-                disabled={!doctorSel}
+                disabled={dateDisabled}
+                // Evita escribir/pegar (permitiendo navegación)
+                inputMode="none"
+                onKeyDown={(e) => {
+                  const nav = ["Tab", "Shift", "ArrowLeft", "ArrowRight", "Home", "End", "Escape"];
+                  if (!nav.includes(e.key)) e.preventDefault();
+                }}
+                onBeforeInput={(e) => e.preventDefault()}
+                onPaste={(e) => e.preventDefault()}
+                // Abre el calendario al click en cualquier parte del input
+                onMouseDown={(e) => {
+                  const el = e.currentTarget as HTMLInputElement;
+                  if (el.disabled) return;
+                  const supportsShowPicker = typeof (el as any).showPicker === "function";
+                  if (supportsShowPicker) {
+                    e.preventDefault();
+                    (el as any).showPicker();
+                  }
+                  // Si el navegador no soporta showPicker (Safari/Firefox),
+                  // no prevenimos el evento para que se abra el picker nativo.
+                }}
+                style={{ cursor: dateDisabled ? "default" : "pointer" }}
               />
             </label>
 
@@ -467,7 +513,9 @@ export default function NuevaCitaAdminPage() {
                   {loadingDisp ? "Cargando..." : "Selecciona hora"}
                 </option>
                 {horarios.map((h) => (
-                  <option key={h} value={h}>{h}</option>
+                  <option key={h} value={h}>
+                    {h}
+                  </option>
                 ))}
               </select>
               {!loadingDisp && !errorDisp && doctorSel && fechaSel && horarios.length === 0 && (
@@ -479,7 +527,10 @@ export default function NuevaCitaAdminPage() {
             <div className={styles.actions}>
               <button
                 type="button"
-                className={cx(styles.btnPrimary, (!puedeAgendar || saving) && styles.btnDisabled)}
+                className={cx(
+                  styles.btnPrimary,
+                  (!puedeAgendar || saving) && styles.btnDisabled
+                )}
                 onClick={onAgendar}
                 disabled={!puedeAgendar}
                 title={!pacienteSel ? "Selecciona un paciente" : undefined}
