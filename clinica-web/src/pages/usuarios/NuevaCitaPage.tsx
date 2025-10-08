@@ -1,5 +1,5 @@
 // src/pages/NuevaCitaPage.tsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./NuevaCitaPage.module.css";
 import {
@@ -9,7 +9,6 @@ import {
 import type { Medico } from "@/features/medicos/models/Medico";
 import { crearCita } from "@/features/citas/api/citas";
 import { obtenerIdPacientePorUsuario } from "@/features/usuarios/api/usuarios";
-import { REGEX, isDateUS } from "@/shared/validators";
 
 function cx(...xs: Array<string | false | null | undefined>) {
   return xs.filter(Boolean).join(" ");
@@ -45,14 +44,12 @@ export default function NuevaCitaPage() {
         setLoadingPaciente(true);
         setErrorPaciente(null);
 
-        // 1) Lee usuario del localStorage (mismo patrón que MisCitasPage)
         const raw = localStorage.getItem("user");
         if (!raw) throw new Error("No hay sesión de usuario");
         const user = JSON.parse(raw);
         const idUsuario = Number(user?.id);
         if (!idUsuario) throw new Error("Usuario inválido");
 
-        // 2) Mapea usuario → paciente
         const pid = await obtenerIdPacientePorUsuario(idUsuario, ac.signal);
         if (!pid) throw new Error("No se encontró el paciente vinculado");
         setIdPaciente(pid);
@@ -80,13 +77,31 @@ export default function NuevaCitaPage() {
   const [doctorSel, setDoctorSel] = useState<Medico | null>(null);
   const [fechaSel, setFechaSel] = useState<string | null>(null); // yyyy-mm-dd
   const [horaSel, setHoraSel] = useState("");
-  // Error local del campo fecha (no choca con errorDocs/errorDisp)
-  const [errorFecha, setErrorFecha] = useState<string>("");
 
   // Disponibilidad
   const [horarios, setHorarios] = useState<string[]>([]);
   const [loadingDisp, setLoadingDisp] = useState(false);
   const [errorDisp, setErrorDisp] = useState<string | null>(null);
+
+  // ---- Date picker: bloquear escritura y abrir al click en todo el campo ----
+  const dateRef = useRef<HTMLInputElement>(null);
+  const dateDisabled = !doctorSel || loadingPaciente || !!errorPaciente;
+
+  const openCalendar = () => {
+    if (dateDisabled) return;
+    const el = dateRef.current;
+    if (!el) return;
+    // Chromium
+    if (typeof (el as any).showPicker === "function") {
+      (el as any).showPicker();
+      return;
+    }
+    // Fallback (Safari/otros)
+    el.focus();
+    try {
+      el.click();
+    } catch {}
+  };
 
   // Cargar médicos
   useEffect(() => {
@@ -125,13 +140,6 @@ export default function NuevaCitaPage() {
       ),
     [doctores, filtroEsp, filtroMedico]
   );
-
-   // Fecha de hoy en formato YYYY-MM-DD (ajustada a hora local)
-  const todayISO = (() => {
-    const d = new Date();
-    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-    return d.toISOString().slice(0, 10); // "YYYY-MM-DD"
-  })();
 
   // cada vez que cambie el doctor, limpiamos selección de fecha/hora y horarios
   useEffect(() => {
@@ -179,16 +187,13 @@ export default function NuevaCitaPage() {
 
   const onAgendar = async () => {
     if (!doctorSel || !fechaSel || !horaSel || saving || !idPaciente) return;
-
     try {
       setSaving(true);
-
       const payload = {
-        idPaciente,             // ← ya no está quemado
+        idPaciente,
         idMedico: doctorSel.id,
         fecha: toZulu(fechaSel, horaSel), // "YYYY-MM-DDTHH:mm:00.000Z"
       };
-
       const res = await crearCita(payload);
       alert(res.message);
       nav("/citas");
@@ -223,11 +228,7 @@ export default function NuevaCitaPage() {
 
       {/* Estado del paciente */}
       {loadingPaciente && <div className={styles.empty}>Cargando paciente…</div>}
-      {errorPaciente && (
-        <div className={styles.error}>
-          {errorPaciente}
-        </div>
-      )}
+      {errorPaciente && <div className={styles.error}>{errorPaciente}</div>}
 
       <div className={styles.layout} aria-disabled={loadingPaciente || !!errorPaciente}>
         {/* Columna izquierda */}
@@ -265,11 +266,9 @@ export default function NuevaCitaPage() {
           <div className={styles.doctorsGrid}>
             {loadingDocs && <div className={styles.empty}>Cargando médicos…</div>}
             {errorDocs && <div className={styles.empty}>{errorDocs}</div>}
-
             {!loadingDocs && !errorDocs && doctoresFiltrados.length === 0 && (
               <div className={styles.empty}>No hay médicos para el filtro seleccionado.</div>
             )}
-
             {!loadingDocs && !errorDocs && doctoresFiltrados.map((d) => (
               <article
                 key={d.id}
@@ -315,28 +314,39 @@ export default function NuevaCitaPage() {
           <label className={styles.field}>
             <span>Selecciona una fecha</span>
             <input
+              ref={dateRef}
               type="date"
               name="fecha"
-              value={fechaSel ?? ""}                       // seguimos usando tu state
-              onChange={(e) => setFechaSel(e.target.value)}// el datepicker entrega YYYY-MM-DD
+              value={fechaSel ?? ""}
+              onChange={(e) => setFechaSel(e.target.value || null)}
+              disabled={dateDisabled}
 
-              // (opcional) límites de fecha:
-              min={todayISO} // impide fechas pasadas
-              // max={todayISO} // impide fechas futuras
-
-              // Bloquear escritura manual (solo usar el calendario)
+              // Evitar escribir/pegar (pero permitir teclas de navegación)
+              inputMode="none"
               onKeyDown={(e) => {
-                const allowed = [
-                  "Tab", "Backspace", "Delete", "ArrowLeft", "ArrowRight", "Home", "End"
-                ];
-                if (e.ctrlKey || e.metaKey || allowed.includes(e.key)) return; // permitir navegación
-                e.preventDefault(); // bloquear cualquier otro carácter
+                const nav = ["Tab","Shift","ArrowLeft","ArrowRight","Home","End","Escape"];
+                if (!nav.includes(e.key)) e.preventDefault();
               }}
-              onPaste={(e) => e.preventDefault()} // bloquear pegar
+              onBeforeInput={(e) => e.preventDefault()}
+              onPaste={(e) => e.preventDefault()}
+
+              // Abrir calendario al click en cualquier parte del input
+              onMouseDown={(e) => {
+                const el = e.currentTarget as HTMLInputElement;
+                if (el.disabled) return;
+
+                const supportsShowPicker = typeof (el as any).showPicker === "function";
+                if (supportsShowPicker) {
+                  // En Chrome/Edge abrimos el picker manualmente y evitamos el foco
+                  e.preventDefault();
+                  (el as any).showPicker();
+                }
+                // En navegadores sin showPicker (Firefox/Safari),
+                // NO prevenimos el evento: el calendario nativo se abrirá solo.
+              }}
+
+              style={{ cursor: dateDisabled ? "default" : "pointer" }}
             />
-            {/* Si quieres mostrar un error local, úsalo aquí:
-            {errorFecha && <small className={styles.muted} style={{color:"#b91c1c"}}>{errorFecha}</small>}
-            */}
           </label>
 
           <label className={styles.field}>

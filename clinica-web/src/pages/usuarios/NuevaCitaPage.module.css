@@ -270,3 +270,23 @@
   text-align: center;
   border-radius: 14px;
 }
+
+/* Hace clickeable todo el campo de fecha */
+.dateClicker {
+  position: relative;
+}
+.dateClicker input {
+  width: 100%;
+}
+.dateOverlay {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.dateOverlay:disabled {
+  cursor: default;
+  pointer-events: none;
+}
